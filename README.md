@@ -1,3 +1,4 @@
+# CEDAR DATASET
 ## DenseNet121:
 
 Epoch [1/5], Loss: 0.1378 ;  Test Accuracy: 99.81%
@@ -75,3 +76,12 @@ Epoch [24/25], Loss: 0.2329 ;  Test Accuracy: 91.86%
 Epoch [25/25], Loss: 0.1785 ;  Test Accuracy: 93.75%
 
 ## ResNet101
+Epoch [1/5], Loss: 0.1673 ;  Test Accuracy: 100.00%
+
+Epoch [2/5], Loss: 0.0138 ;  Test Accuracy: 100.00%
+
+Epoch [3/5], Loss: 0.0133 ;  Test Accuracy: 100.00%
+
+Epoch [4/5], Loss: 0.0051 ;  Test Accuracy: 100.00%
+
+Epoch [5/5], Loss: 0.0026 ;  Test Accuracy: 100.00%

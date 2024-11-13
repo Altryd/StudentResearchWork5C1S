@@ -36,7 +36,7 @@ for model_path in models_path:
             _, predicted = torch.max(outputs.data, dim=1)
             predictions.append(predicted)
             total_correct += (predicted == labels).sum().item()
-        print(f"predictions: {predictions}")
+        print(f"predictions for first batch: {predictions[0]}...")
 
     accuracy = total_correct / len(val_data)
-    print(f'Test Accuracy for model {models_path}: {(100 * accuracy):.2f}%')
+    print(f'Test Accuracy for model {model_path}: {(100 * accuracy):.2f}%')
