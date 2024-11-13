@@ -26,7 +26,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # TODO: это ваще нужно?
 ])
 
-dataset = datasets.ImageFolder(root=r'C:\Users\Altryd\CEDAR\signatures', transform=transform)
+dataset = datasets.ImageFolder(root=r'CEDAR\signatures', transform=transform)
 loader = DataLoader(dataset=dataset, shuffle=True)
 print(dataset)
 train_ratio = 0.8
@@ -44,6 +44,8 @@ print("Number of validation samples:", len(val_data))
 
 num_epochs = 5
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(device)
+efficientnet_b4.to(device)
 
 for epoch in range(num_epochs):
     efficientnet_b4.train()  # Устанавливаем модель в режим обучения
@@ -80,7 +82,7 @@ for epoch in range(num_epochs):
 
     accuracy = total_correct / len(val_data)
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_dataset):.4f} ;  Test Accuracy: {(100 * accuracy):.2f}%')
-    torch.save(efficientnet_b4.state_dict(), f'efficientnet_b4_2fc_epoch{epoch+1}.pth')
+    torch.save(efficientnet_b4, f'efficientnet_b4_2fc_epoch{epoch+1}.pth')
 
 
-torch.save(efficientnet_b4.state_dict(), 'efficientnet_b4_2fc_trained.pth')
+torch.save(efficientnet_b4, 'efficientnet_b4_2fc_trained.pth')

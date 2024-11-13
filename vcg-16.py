@@ -31,7 +31,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # TODO: это ваще нужно?
 ])
 
-dataset = datasets.ImageFolder(root=r'C:\Users\Altryd\CEDAR\signatures', transform=transform)
+dataset = datasets.ImageFolder(root=r'CEDAR\signatures', transform=transform)
 loader = DataLoader(dataset=dataset, shuffle=True)
 print(dataset)
 train_ratio = 0.8
@@ -47,8 +47,9 @@ print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))
 
 
-num_epochs = 5
+num_epochs = 25
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+vgg16.to(device)
 
 for epoch in range(num_epochs):
     vgg16.train()  # Устанавливаем модель в режим обучения

@@ -20,7 +20,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # TODO: это ваще нужно?
 ])
 
-dataset = datasets.ImageFolder(root=r'C:\Users\Altryd\CEDAR\signatures', transform=transform)
+dataset = datasets.ImageFolder(root=r'CEDAR\signatures', transform=transform)
 loader = DataLoader(dataset=dataset, shuffle=True)
 print(dataset)
 train_ratio = 0.8
@@ -38,6 +38,7 @@ print("Number of validation samples:", len(val_data))
 
 num_epochs = 5
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+resnet101.to(device)
 
 for epoch in range(num_epochs):
     resnet101.train()  # Устанавливаем модель в режим обучения
@@ -72,10 +73,10 @@ for epoch in range(num_epochs):
 
     accuracy = total_correct / len(val_data)
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_dataset):.4f} ;  Test Accuracy: {(100 * accuracy):.2f}%')
-    torch.save(resnet101.state_dict(), f'resnet101_2fc_epoch{epoch+1}.pth')
+    torch.save(resnet101, f'resnet101_2fc_epoch{epoch+1}.pth')
 
 
-torch.save(resnet101.state_dict(), 'resnet101_2fc_trained.pth')
+torch.save(resnet101, 'resnet101_2fc_trained.pth')
 
 """
 Epoch [1/5], Loss: 0.8967 ;  Test Accuracy: 50.45%

@@ -11,7 +11,7 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-dataset = datasets.ImageFolder(root=r'C:\Users\Altryd\CEDAR\signatures', transform=transform)
+dataset = datasets.ImageFolder(root=r'CEDAR\signatures', transform=transform)
 loader = DataLoader(dataset=dataset, shuffle=True)
 train_ratio = 0.8
 train_size = int(len(dataset)*train_ratio)
@@ -20,8 +20,8 @@ test_size = len(dataset) - train_size
 train_data, val_data = random_split(dataset, [train_size, test_size])
 train_dataset = DataLoader(dataset=train_data, batch_size=32, shuffle=True)
 val_dataset = DataLoader(dataset=val_data, batch_size=32, shuffle=True)
-models_path = ["vgg16_2fc_trained.pth", "densenet121_handwritten_2fc_trained.pth", "efficientnet_b4_2fc_trained.pth",
-               "resnet101_2fc_trained.pth"]
+models_path = ["densenet121_handwritten_2fc_trained.pth", "efficientnet_b4_2fc_trained.pth",
+               "resnet101_2fc_trained.pth", "vgg16_2fc_trained.pth", ]
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 for model_path in models_path:
     model = torch.load(model_path, weights_only=False)
