@@ -85,3 +85,24 @@ Epoch [3/5], Loss: 0.0133 ;  Test Accuracy: 100.00%
 Epoch [4/5], Loss: 0.0051 ;  Test Accuracy: 100.00%
 
 Epoch [5/5], Loss: 0.0026 ;  Test Accuracy: 100.00%
+
+## VIT B 32 (learning rate = 0.0002)
+Epoch [1/50], Loss: 0.6925 ;  Test Accuracy: 79.36%
+
+Epoch [2/50], Loss: 0.6712 ;  Test Accuracy: 47.92%
+
+Epoch [3/50], Loss: 0.6265 ;  Test Accuracy: 47.92%
+
+Epoch [4/50], Loss: 0.4582 ;  Test Accuracy: 96.97%
+
+Epoch [5/50], Loss: 0.2434 ;  Test Accuracy: 99.62%
+
+Epoch [6/50], Loss: 0.1848 ;  Test Accuracy: 100.00%
+
+Epoch [7/50], Loss: 0.0055 ;  Test Accuracy: 100.00%
+
+Epoch [8/50], Loss: 0.0014 ;  Test Accuracy: 100.00%
+
+Epoch [9/50], Loss: 0.0006 ;  Test Accuracy: 100.00%
+
+...
