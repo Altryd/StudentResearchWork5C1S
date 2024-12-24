@@ -13,32 +13,39 @@ num_classes = 2
 # vit_b_32.fc = nn.Linear(vit_b_32.fc.in_features, num_classes)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(vit_b_32.parameters(), lr=0.0002, momentum=0.9)
+optimizer = torch.optim.SGD(vit_b_32.parameters(), lr=0.002, momentum=0.6)
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # TODO: это ваще нужно?
 ])
 
-dataset = datasets.ImageFolder(root=r'CEDAR\signatures', transform=transform)
+dataset = datasets.ImageFolder(root=r'Samara', transform=transform)
 loader = DataLoader(dataset=dataset, shuffle=True)
 print(dataset)
-train_ratio = 0.8
-train_size = int(len(dataset)*train_ratio)
-test_size = len(dataset) - train_size
-print(dataset)
+test_ratio = 0.2
+# train_size = int(len(dataset)*train_ratio)
+# test_size = len(dataset) - train_size
+# print(dataset)
 
-train_data, val_data = random_split(dataset, [train_size, test_size])
-train_dataset = DataLoader(dataset=train_data, batch_size=32, shuffle=True)
-val_dataset = DataLoader(dataset=val_data, batch_size=32, shuffle=True)
+#Split dataset into train and validation
+train_indices, val_indices = train_test_split(list(range(len(dataset.targets))), test_size=test_ratio, stratify=dataset.targets)
+train_data = torch.utils.data.Subset(dataset, train_indices)
+val_data = torch.utils.data.Subset(dataset, val_indices)
+
+#Create DataLoader
+train_dataset = DataLoader(train_data, batch_size=4, shuffle=True)
+val_dataset = DataLoader(val_data, batch_size=4, shuffle=True)
 
 print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))
 
 
-num_epochs = 50
+num_epochs = 25
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 vit_b_32.to(device)
+best_acc = 0
+min_loss = 10 ** 10
 
 for epoch in range(num_epochs):
     vit_b_32.train()  # Устанавливаем модель в режим обучения
@@ -72,8 +79,16 @@ for epoch in range(num_epochs):
             total_correct += (predicted == labels).sum().item()
 
     accuracy = total_correct / len(val_data)
+    if accuracy > best_acc:
+        best_acc = accuracy
+        min_loss = running_loss/len(train_dataset)
+        torch.save(vit_b_32, f'vit_b_32_2fc_samara_epoch_best_acc.pth')
+    elif best_acc == accuracy and running_loss/len(train_dataset) < min_loss:
+        min_loss = running_loss/len(train_dataset)
+        torch.save(vit_b_32, f'vit_b_32_2fc_samara_epoch_best_acc.pth')
+
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss/len(train_dataset):.4f} ;  Test Accuracy: {(100 * accuracy):.2f}%')
-    torch.save(vit_b_32, f'vit_b_32_2fc_epoch{epoch+1}.pth')
 
 
-torch.save(vit_b_32, 'vit_b_32_2fc_trained.pth')
+print(f"Best acc: {best_acc} with corresponding loss: {min_loss}")
+torch.save(vit_b_32, 'vit_b_32_2fc_samara_trained.pth')
