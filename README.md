@@ -1,3 +1,7 @@
+Сводная таблица
+Accuracy:
+![accuracy results](./Results/accuracy.png)
+
 # SAMARA DATASET
 
 ## DenseNet
@@ -171,4 +175,56 @@ Epoch [7/50], Loss: 0.0055 ;  Test Accuracy: 100.00%
 Epoch [8/50], Loss: 0.0014 ;  Test Accuracy: 100.00%
 Epoch [9/50], Loss: 0.0006 ;  Test Accuracy: 100.00%
 ...
+```
+
+
+# TOLOKA AI Dataset
+## DenseNet121
+```
+Best acc: 0.90
+```
+## Resnet101
+```
+Epoch [1/35], Loss: 0.7712 ;  Test Accuracy: 66.80%
+Epoch [2/35], Loss: 0.5377 ;  Test Accuracy: 79.51%
+Epoch [3/35], Loss: 0.4263 ;  Test Accuracy: 64.05%
+...
+Epoch [32/35], Loss: 0.0054 ;  Test Accuracy: 88.50%
+Epoch [33/35], Loss: 0.0027 ;  Test Accuracy: 88.66%
+Epoch [34/35], Loss: 0.0214 ;  Test Accuracy: 87.37%
+Epoch [35/35], Loss: 0.0333 ;  Test Accuracy: 85.67%
+Best acc: 0.8866396761133604 with corresponding loss: 0.0013496746879369547
+```
+
+## EfficientNet_b4
+```
+Epoch [1/25], Loss: 0.6573 ;  Test Accuracy: 65.10%
+Epoch [2/25], Loss: 0.6170 ;  Test Accuracy: 62.91%
+...
+Epoch [24/25], Loss: 0.2855 ;  Test Accuracy: 82.91%
+Epoch [25/25], Loss: 0.2662 ;  Test Accuracy: 83.00%
+Best acc: 0.8299595141700404 with corresponding loss: 0.0665548487679242
+```
+
+## VGG - 16
+```
+Epoch [1/25], Loss: 0.6119 ;  Test Accuracy: 76.36%
+Epoch [2/25], Loss: 0.4456 ;  Test Accuracy: 76.28%
+...
+Epoch [22/25], Loss: 0.0004 ;  Test Accuracy: 88.83%
+Epoch [23/25], Loss: 0.0001 ;  Test Accuracy: 88.99%
+Epoch [24/25], Loss: 0.0001 ;  Test Accuracy: 89.15%
+Epoch [25/25], Loss: 0.0001 ;  Test Accuracy: 89.47%
+Best acc: 0.8987854251012146 with corresponding loss: 1.6751097549987063e-05
+```
+
+## VIT_B_32
+```
+Epoch [1/25], Loss: 0.6930 ;  Test Accuracy: 51.98%
+Epoch [2/25], Loss: 0.6874 ;  Test Accuracy: 53.12%
+...
+Epoch [23/25], Loss: 0.6134 ;  Test Accuracy: 59.03%
+Epoch [24/25], Loss: 0.6058 ;  Test Accuracy: 62.91%
+Epoch [25/25], Loss: 0.5996 ;  Test Accuracy: 58.70%
+Best acc: 0.6291497975708502 with corresponding loss: 0.6057827390573399
 ```
