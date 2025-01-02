@@ -16,14 +16,51 @@ resnet101.name = "resnet101"
 
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(resnet101.parameters(), lr=0.001, momentum=0.9)
-transform = transforms.Compose([
-    transforms.Resize((260, 140)),
+train_transform_v34 = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.CenterCrop((224, 224)),
+    transforms.RandomRotation(25),
+    transforms.RandomGrayscale(p=0.1),
+    transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
+    transforms.ToTensor(),
+    transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+test_transform_v34 = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.CenterCrop((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-train_dataset, val_dataset, train_data, val_data = load_dataset(r"Samara",
-                                                                transform=models.ResNet101_Weights.IMAGENET1K_V2.transforms())
+train_transform_v101 = transforms.Compose([
+    transforms.Resize((232, 232)),
+    transforms.CenterCrop((224, 224)),
+    transforms.RandomRotation(25),
+    transforms.RandomGrayscale(p=0.1),
+    transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
+    transforms.ToTensor(),
+    transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+test_transform_v101 = transforms.Compose([
+    transforms.Resize((232, 232)),
+    transforms.CenterCrop((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+
+(train_dataset, val_dataset, train_data,
+ val_data) = load_dataset_with_train_test_transforms("Samara",
+                                                     train_transform=test_transform_v101,
+                                                     test_transform=test_transform_v101)
+"""
+(train_dataset, val_dataset, train_data,
+ val_data) = load_dataset("Samara", transform=test_transform)
+"""
 
 print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))

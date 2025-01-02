@@ -14,8 +14,21 @@ vit_b_32 = models.vit_b_32(num_classes=2)
 
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(vit_b_32.parameters(), lr=0.0002, momentum=0.3)
-transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+train_transform = transforms.Compose([
+    transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.BILINEAR),
+    transforms.CenterCrop((224, 224)),
+    transforms.RandomRotation(25),
+    transforms.RandomGrayscale(p=0.1),
+    transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
+    transforms.CenterCrop((224, 224)),
+    transforms.ToTensor(),
+    transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+test_transform = transforms.Compose([
+    transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.BILINEAR),
+    transforms.CenterCrop((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # TODO: это ваще нужно?
 ])

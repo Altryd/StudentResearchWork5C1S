@@ -55,7 +55,8 @@ def load_dataset_with_train_test_transforms(dataset_path: str, train_transform, 
     return train_dataset, val_dataset, train_data, val_data
 
 
-def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_data, val_data, dataset_name="", model_name=None, num_epochs=35):
+def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
+                scheduler=None, dataset_name="", model_name=None, num_epochs=35):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     if not model_name:
@@ -90,7 +91,8 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
             optimizer.step()
 
             running_loss += loss.item()
-
+        if scheduler:
+            scheduler.step()
         model.eval()
         total_correct = 0
         with torch.no_grad():
@@ -106,12 +108,12 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
         if accuracy > best_acc:
             torch.save(model, f'{model_name}_{dataset_name}_best_acc.pth')
             best_acc = accuracy
-            min_loss = running_loss / len(train_dataset)
+            min_loss = running_loss / len(train_data)
         elif best_acc == accuracy and running_loss / len(train_data) < min_loss:
             min_loss = running_loss / len(train_data)
             torch.save(model, f'{model_name}_{dataset_name}_best_acc.pth')
         print(
-            f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(train_dataset):.4f} ;  '
+            f'Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss / len(train_data):.4f} ;  '
             f'Train Accuracy: {100 * total_correct_train / len(train_data):.2f}% ; '
             f'Test Accuracy: {(100 * accuracy):.2f}%')
 
