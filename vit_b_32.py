@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
+import torchvision.transforms.v2 as transforms
 from torchvision import datasets
 from torchvision import models
 from torch.utils.data import DataLoader, random_split
@@ -30,19 +30,20 @@ test_transform = transforms.Compose([
     transforms.Resize((256, 256), interpolation=transforms.InterpolationMode.BILINEAR),
     transforms.CenterCrop((224, 224)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # TODO: это ваще нужно?
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
 #Split dataset into train and validation
-path_to_dataset = r"Samara_inverse"
+path_to_dataset = r"Samara"
 (train_dataset, val_dataset,
  train_data, val_data) = load_dataset_with_train_test_transforms(path_to_dataset,
-                                                                 train_transform=models.ViT_B_32_Weights.IMAGENET1K_V1.transforms(),
-                                                                 test_transform=models.ViT_B_32_Weights.IMAGENET1K_V1.transforms())
+                                                                 train_transform=train_transform,
+                                                                 test_transform=test_transform,
+                                                                 batch_size=4)
 
 print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))
 
 
 train_model(vit_b_32, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
-            dataset_name=path_to_dataset, num_epochs=45)
+            dataset_name=path_to_dataset, num_epochs=200)

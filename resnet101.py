@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
-import torchvision.transforms as transforms
+import torchvision.transforms.v2 as transforms
 from torchvision import datasets
 from torchvision import models
 from torch.utils.data import DataLoader, random_split
 from sklearn.model_selection import train_test_split
-from utility import load_dataset, train_model
+from utility import load_dataset, train_model, load_dataset_with_train_test_transforms
 
 resnet101 = models.resnet101(pretrained=False, num_classes=2)
 resnet101.name = "resnet101"
@@ -54,9 +54,9 @@ test_transform_v101 = transforms.Compose([
 
 
 (train_dataset, val_dataset, train_data,
- val_data) = load_dataset_with_train_test_transforms("Samara",
+ val_data) = load_dataset_with_train_test_transforms("Samara_inverse",
                                                      train_transform=test_transform_v101,
-                                                     test_transform=test_transform_v101)
+                                                     test_transform=test_transform_v101, batch_size=4)
 """
 (train_dataset, val_dataset, train_data,
  val_data) = load_dataset("Samara", transform=test_transform)
@@ -69,4 +69,5 @@ print("Number of validation samples:", len(val_data))
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 resnet101.to(device)
 
-train_model(resnet101, optimizer, criterion, train_dataset, val_dataset, train_data, val_data, dataset_name="Samara")
+train_model(resnet101, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
+            dataset_name="Samara_inverse", num_epochs=80)
