@@ -1,0 +1,64 @@
+Samara Inverse с аугментациями:
+Epoch [48/50], Loss: 0.1060 ;  Train Accuracy: 80.47% ; Test Accuracy: 92.19%
+Epoch [49/50], Loss: 0.0950 ;  Train Accuracy: 85.16% ; Test Accuracy: 67.19%
+Epoch [50/50], Loss: 0.1162 ;  Train Accuracy: 80.86% ; Test Accuracy: 87.50%
+Best acc: 0.921875 with corresponding loss: 0.09878288059553597
+
+Samara Inverse без аугментаций:
+Epoch [69/80], Loss: 0.0443 ;  Train Accuracy: 91.02% ; Test Accuracy: 95.31%
+Epoch [70/80], Loss: 0.0245 ;  Train Accuracy: 96.48% ; Test Accuracy: 84.38%
+Epoch [71/80], Loss: 0.0285 ;  Train Accuracy: 96.09% ; Test Accuracy: 87.50%
+Epoch [72/80], Loss: 0.0652 ;  Train Accuracy: 88.28% ; Test Accuracy: 84.38%
+Epoch [73/80], Loss: 0.0310 ;  Train Accuracy: 94.53% ; Test Accuracy: 92.19%
+Epoch [74/80], Loss: 0.0346 ;  Train Accuracy: 94.14% ; Test Accuracy: 82.81%
+Epoch [75/80], Loss: 0.0359 ;  Train Accuracy: 94.53% ; Test Accuracy: 89.06%
+Epoch [76/80], Loss: 0.0408 ;  Train Accuracy: 92.58% ; Test Accuracy: 84.38%
+Epoch [77/80], Loss: 0.0327 ;  Train Accuracy: 92.97% ; Test Accuracy: 84.38%
+Epoch [78/80], Loss: 0.0232 ;  Train Accuracy: 97.27% ; Test Accuracy: 87.50%
+Epoch [79/80], Loss: 0.0211 ;  Train Accuracy: 97.66% ; Test Accuracy: 84.38%
+Epoch [80/80], Loss: 0.0279 ;  Train Accuracy: 96.48% ; Test Accuracy: 81.25%
+Best acc: 0.953125 with corresponding loss: 0.04106427680380875
+
+Samara с аугментациями:
+Epoch [172/200], Loss: 0.0274 ;  Train Accuracy: 94.92% ; Test Accuracy: 98.44%
+Epoch [173/200], Loss: 0.0196 ;  Train Accuracy: 97.66% ; Test Accuracy: 92.19%
+….
+Epoch [198/200], Loss: 0.0427 ;  Train Accuracy: 91.41% ; Test Accuracy: 92.19%
+Epoch [199/200], Loss: 0.0338 ;  Train Accuracy: 93.36% ; Test Accuracy: 95.31%
+Epoch [200/200], Loss: 0.0394 ;  Train Accuracy: 92.19% ; Test Accuracy: 92.19%
+Best acc: 0.984375 with corresponding loss: 0.027385719590256485
+
+
+Samara без аугментаций:
+Epoch [191/200], Loss: 0.0202 ;  Train Accuracy: 95.70% ; Test Accuracy: 100.00%
+Epoch [192/200], Loss: 0.0190 ;  Train Accuracy: 97.27% ; Test Accuracy: 96.88%
+Epoch [193/200], Loss: 0.0389 ;  Train Accuracy: 91.41% ; Test Accuracy: 98.44%
+Epoch [194/200], Loss: 0.0238 ;  Train Accuracy: 94.92% ; Test Accuracy: 100.00%
+Epoch [195/200], Loss: 0.0193 ;  Train Accuracy: 96.48% ; Test Accuracy: 96.88%
+Epoch [196/200], Loss: 0.0170 ;  Train Accuracy: 96.88% ; Test Accuracy: 98.44%
+Epoch [197/200], Loss: 0.0157 ;  Train Accuracy: 96.88% ; Test Accuracy: 96.88%
+Epoch [198/200], Loss: 0.0232 ;  Train Accuracy: 94.92% ; Test Accuracy: 96.88%
+Epoch [199/200], Loss: 0.0264 ;  Train Accuracy: 94.14% ; Test Accuracy: 98.44%
+Epoch [200/200], Loss: 0.0166 ;  Train Accuracy: 97.27% ; Test Accuracy: 96.88%
+Best acc: 1.0 with corresponding loss: 0.011945828319824159
+
+
+BHSig260-Hindi-refactored
+Epoch [51/80], Loss: 0.0035 ;  Train Accuracy: 99.19% ; Test Accuracy: 98.67%
+Epoch [52/80], Loss: 0.0029 ;  Train Accuracy: 99.38% ; Test Accuracy: 98.55%
+…
+Epoch [76/80], Loss: 0.0013 ;  Train Accuracy: 99.67% ; Test Accuracy: 98.03%
+Epoch [77/80], Loss: 0.0028 ;  Train Accuracy: 99.61% ; Test Accuracy: 98.26%
+Epoch [78/80], Loss: 0.0025 ;  Train Accuracy: 99.49% ; Test Accuracy: 98.32%
+Epoch [79/80], Loss: 0.0015 ;  Train Accuracy: 99.52% ; Test Accuracy: 98.38%
+Epoch [80/80], Loss: 0.0044 ;  Train Accuracy: 99.02% ; Test Accuracy: 98.38%
+Best acc: 0.9866898148148148 with corresponding loss: 0.0035135041042440524
+
+
+BHSig260-Bengali-refactored
+Epoch [76/80], Loss: 0.0006 ;  Train Accuracy: 99.91% ; Test Accuracy: 99.35%
+Epoch [77/80], Loss: 0.0026 ;  Train Accuracy: 99.54% ; Test Accuracy: 98.43%
+Epoch [78/80], Loss: 0.0019 ;  Train Accuracy: 99.56% ; Test Accuracy: 99.35%
+Epoch [79/80], Loss: 0.0025 ;  Train Accuracy: 99.79% ; Test Accuracy: 99.54%
+Epoch [80/80], Loss: 0.0023 ;  Train Accuracy: 99.68% ; Test Accuracy: 99.35%
+Best acc: 0.9953703703703703 with corresponding loss: 0.0024775183695552455
