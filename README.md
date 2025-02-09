@@ -1,3 +1,20 @@
+## Ссылки
+
+https://habr.com/ru/articles/737060/ - реализация и объяснение triple loss
+
+https://github.com/davidsandberg/facenet - реализация facenet
+
+https://www.researchgate.net/publication/319284867_Deep_Convolutional_Neural_Network_Using_Triplets_of_Faces_Deep_Ensemble_and_Score-Level_Fusion_for_Face_Recognition?enrichId=rgreq-04ea56ac9083d33fd2aca017fd3ea963-XXX&enrichSource=Y292ZXJQYWdlOzMxOTI4NDg2NztBUzo3OTk2NzEwMjI4MDA4OThAMTU2NzY2NzgzNzI4MA%3D%3D&el=1_x_3&_esc=publicationCoverPdf - тоже работа про triplet loss на лицах
+
+https://blog.fastforwardlabs.com/2021/06/09/deep-metric-learning-for-signature-verification.html - triplet loss, но уже на подписях
+
+https://github.com/divyanshrai/Signature-triplet-loss и https://www.kaggle.com/code/divyanshrai/different-triplet-loss-function-on-signature - triplet-loss, но на подписях и с кодом. Пока что не тестировалось
+
+https://github.com/hrantzsch/signature-embedding - эмбеддинги и triplet-loss для MNIST датасета, но этот проект недоделан для подписей и нужно доделывать его
+
+
+
+
 ## Постановка задачи:
 Во входных данных имеется N подлинных и (в идеале) столько же N поддельных подписей. В процессе обучения, нейронная сеть должна научиться определять подлинные подписи от поддельных (т.е. задача бинарной классификации).
 
