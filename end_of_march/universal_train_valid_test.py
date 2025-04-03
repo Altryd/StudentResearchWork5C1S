@@ -31,6 +31,7 @@ TEST_VAL_BATCH_SIZE = -1
 RANDOM_STATE = 111
 dataset_path = "datasets/CEDAR_refactored"
 dataset_name = dataset_path.split("/")[-1]
+SAVE_MODEL_EVERY_N_EPOCHS = 10
 
 
 # создание модели
@@ -324,6 +325,7 @@ best_test_metrics = {
 }
 
 for epoch in range(EPOCHS):
+    torch.cuda.empty_cache()
     start_time = time.time()
     logger.info(f"\nEpoch {epoch + 1}/{EPOCHS}")
 
@@ -366,7 +368,7 @@ for epoch in range(EPOCHS):
             'true_positive': test_result['true_positive'],
             'threshold': best_threshold
         })
-    if epoch % 25 == 0:
+    if epoch % SAVE_MODEL_EVERY_N_EPOCHS == 0 and epoch > 0:
         torch.save(model.state_dict(), f"trained_models/{model.name}_trained_{dataset_name}_epoch_{epoch}.pth")
     end_time = time.time()
     elapsed_time = end_time - start_time

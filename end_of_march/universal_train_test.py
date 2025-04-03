@@ -30,6 +30,7 @@ BATCH_SIZE = 32
 RANDOM_STATE = 111
 dataset_path = "datasets/march_1_full"
 dataset_name = dataset_path.split("/")[-1]
+SAVE_MODEL_EVERY_N_EPOCHS = 10
 
 
 # создание модели
@@ -292,6 +293,7 @@ logger.info(f"EMBED_SIZE={EMBEDDING_SIZE}; MARGIN={MARGIN}; EPOCHS={EPOCHS}\n"
 
 
 for epoch in range(EPOCHS):
+    torch.cuda.empty_cache()
     # начальное время
     start_time = time.time()
 
@@ -311,7 +313,7 @@ for epoch in range(EPOCHS):
     logger.info(f"Best Threshold: {best_result['threshold']:.1f}, F1: {best_result['f1']:.4f}, "
                 f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['ap']:.4f}")
     logger.info(f"TN: {best_result['tn']}, FP: {best_result['fp']}, FN: {best_result['fn']}, TP: {best_result['tp']}")
-    if epoch % 25 == 0 and epoch > 0:
+    if epoch % SAVE_MODEL_EVERY_N_EPOCHS == 0 and epoch > 0:
         torch.save(model.state_dict(), f"trained_models/{model.name}_trained_epoch_{epoch}.pth")
     end_time = time.time()
     elapsed_time = end_time - start_time
