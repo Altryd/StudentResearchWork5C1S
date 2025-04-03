@@ -113,6 +113,36 @@ def create_model(model_name="resnet34", embedding_size=EMBEDDING_SIZE, pretraine
     return model.to(device), train_transform, test_transform
 
 
+# Функция для вычисления метрик
+def calculate_metrics(all_distances, all_labels, threshold):
+    # Бинаризация предсказаний по порогу
+    predictions = (all_distances <= threshold).astype(int)
+
+    # Вычисление метрик
+    roc_auc = roc_auc_score(all_labels,
+                            -all_distances)  # Используем -distances, так как меньшее расстояние = большее сходство
+    ap = average_precision_score(all_labels, -all_distances)
+    tn, fp, fn, tp = confusion_matrix(all_labels, predictions).ravel()
+    accuracy = accuracy_score(all_labels, predictions)
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = f1_score(all_labels, predictions)
+
+    return {
+        'threshold': threshold,
+        'roc_auc': roc_auc,
+        'average_precision': ap,
+        'true_negative': tn,
+        'false_positive': fp,
+        'false_negative': fn,
+        'true_positive': tp,
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1
+    }
+
+
 # Функция для выбора триплетов (online triplet mining)
 def select_triplets(embeddings, labels, use_semihard=False, margin=MARGIN):
     triplets = []
