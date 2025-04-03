@@ -88,10 +88,12 @@ def create_model(model_name="resnet34", embedding_size=EMBEDDING_SIZE, pretraine
         test_transform = test_transform_vit_b_16
     elif model_name == "convnext_tiny":
         model = models.convnext_tiny(pretrained=True)
-        num_ftrs = model.classifier[1].in_features
-        model.classifier = torch.nn.Sequential(torch.nn.Dropout(p=0.4, inplace=True),
-                                               torch.nn.Linear(in_features=num_ftrs,
-                                                               out_features=EMBEDDING_SIZE,
+        # print(model.classifier)
+        num_ftrs = model.classifier[0].normalized_shape[0]
+        from utility import LayerNorm2d
+        model.classifier = torch.nn.Sequential(LayerNorm2d((num_ftrs,), eps=1e-6, elementwise_affine=True),
+                                               torch.nn.Flatten(start_dim=1, end_dim=-1),
+                                               torch.nn.Linear(in_features=num_ftrs, out_features=EMBEDDING_SIZE,
                                                                bias=True))
         train_transform = train_transform_convnext_tiny
         test_transform = test_transform_convnext_tiny
@@ -106,19 +108,32 @@ def create_model(model_name="resnet34", embedding_size=EMBEDDING_SIZE, pretraine
 
 
 # Функция для вычисления метрик
-def calculate_metrics(distances, labels, threshold):
-    predictions = (distances <= threshold).astype(int)
-    roc_auc = roc_auc_score(labels, -distances)  # Меньше расстояние = больше сходство
-    ap = average_precision_score(labels, -distances)
-    tn, fp, fn, tp = confusion_matrix(labels, predictions, labels=[0, 1]).ravel()
-    accuracy = accuracy_score(labels, predictions)
+def calculate_metrics(all_distances, all_labels, threshold):
+    # Бинаризация предсказаний по порогу
+    predictions = (all_distances <= threshold).astype(int)
+
+    # Вычисление метрик
+    roc_auc = roc_auc_score(all_labels,
+                            -all_distances)  # Используем -distances, так как меньшее расстояние = большее сходство
+    ap = average_precision_score(all_labels, -all_distances)
+    tn, fp, fn, tp = confusion_matrix(all_labels, predictions).ravel()
+    accuracy = accuracy_score(all_labels, predictions)
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = f1_score(labels, predictions)
+    f1 = f1_score(all_labels, predictions)
+
     return {
-        'threshold': threshold, 'roc_auc': roc_auc, 'ap': ap,
-        'tn': tn, 'fp': fp, 'fn': fn, 'tp': tp,
-        'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1
+        'threshold': threshold,
+        'roc_auc': roc_auc,
+        'average_precision': ap,
+        'true_negative': tn,
+        'false_positive': fp,
+        'false_negative': fn,
+        'true_positive': tp,
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1
     }
 
 
@@ -251,7 +266,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
 # Загрузка модели
-model, train_transform, test_transform = create_model(model_name="vit_b_16",
+model, train_transform, test_transform = create_model(model_name="convnext_tiny",
                                                       embedding_size=EMBEDDING_SIZE,
                                                       pretrained_path=None,
                                                       device=device)
@@ -268,13 +283,19 @@ train_dataset, _, _, _ = load_dataset_with_train_test_transforms(
 )
 """
 
-train_dataset, _ = load_dataset_full(
-    dataset_path, transform=train_transform, batch_size=BATCH_SIZE, shuffle=False
-)
+if second_dataset_path:
+    train_dataset, _ = load_dataset_full(
+        dataset_path, transform=train_transform, batch_size=BATCH_SIZE, shuffle=False
+    )
 
-test_dataset, _ = load_dataset_full(
-    second_dataset_path, transform=test_transform, batch_size=BATCH_SIZE, shuffle=False
-)
+    test_dataset, _ = load_dataset_full(
+        second_dataset_path, transform=test_transform, batch_size=BATCH_SIZE, shuffle=False
+    )
+else:
+    train_dataset, test_dataset, _, _ = load_dataset_with_train_test_transforms(
+        dataset_path, train_transform=train_transform, test_ratio=0.2,
+        test_transform=test_transform, batch_size=BATCH_SIZE, random_state=RANDOM_STATE, all_shuffle=False
+    )
 
 use_semihard_negatives = True  # Переключатель для semi-hard/hard negatives
 current_date = f"{datetime.datetime.now().day}-{datetime.datetime.now().month}"
@@ -289,6 +310,18 @@ logger.info(f"EMBED_SIZE={EMBEDDING_SIZE}; MARGIN={MARGIN}; EPOCHS={EPOCHS}\n"
             f"BATCH_SIZE={BATCH_SIZE}; RANDOM_STATE={RANDOM_STATE}; DATASET={dataset_path}\n"
             f"MODEL={model.name}; OPTIMIZER={optimizer}\n"
             f"Triplets: {'SEMI-HARD' if use_semihard_negatives else 'HARD'}")
+
+best_test_metrics = {
+    'f1_score': 0.0,
+    'roc_auc': 0.0,
+    'average_precision': 0.0,
+    'epoch': -1,
+    'true_negative': 0,
+    'false_positive': 0,
+    'false_negative': 0,
+    'true_positive': 0,
+    'threshold': 0.0
+}
 
 
 for epoch in range(EPOCHS):
@@ -310,16 +343,32 @@ for epoch in range(EPOCHS):
 
     # Вычисление метрик для разных порогов
     results = [calculate_metrics(distances, labels, t) for t in np.arange(0.1, 6.0, 0.25)]
-    best_result = max(results, key=lambda x: x['f1'])
-    logger.info(f"Best Threshold: {best_result['threshold']:.1f}, F1: {best_result['f1']:.4f}, "
-                f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['ap']:.4f}")
-    logger.info(f"TN: {best_result['tn']}, FP: {best_result['fp']}, FN: {best_result['fn']}, TP: {best_result['tp']}")
+    best_result = max(results, key=lambda x: x['f1_score'])
+    logger.info(f"Best Threshold: {best_result['threshold']:.1f}, F1: {best_result['f1_score']:.4f}, "
+                f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['average_precision']:.4f}")
+    logger.info(f"TN: {best_result['true_negative']}, FP: {best_result['false_positive']}, "
+                f"FN: {best_result['false_negative']}, TP: {best_result['true_positive']}"
+                f"Accuracy: {best_result['accuracy']} Precision: {best_result['precision']}; "
+                f"Recall: {best_result['recall']}")
+    if best_result['f1_score'] > best_test_metrics['f1_score']:
+        best_test_metrics.update({
+            'f1_score': best_result['f1_score'],
+            'roc_auc': best_result['roc_auc'],
+            'average_precision': best_result['average_precision'],
+            'epoch': epoch,
+            'true_negative': best_result['true_negative'],
+            'false_positive': best_result['false_positive'],
+            'false_negative': best_result['false_negative'],
+            'true_positive': best_result['true_positive'],
+            'threshold': best_result['threshold']
+        })
     if epoch % 25 == 0 and epoch > 0:
-        torch.save(model.state_dict(), f"{model.name}_trained_epoch_{epoch}.pth")
+        torch.save(model.state_dict(), f"trained_models/{model.name}_trained_epoch_{epoch}.pth")
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f'Прошло времени  (секунды): {elapsed_time}')
     torch.cuda.empty_cache()
 
-# Сохранение модели (опционально)
+logger.info(f"BEST METRICS:\n{best_test_metrics}")
+# Сохранение модели
 torch.save(model.state_dict(), f"trained_models/{model.name}_trained_epoch_{EPOCHS}.pth")
