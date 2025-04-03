@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader, random_split
 from utility import load_dataset, train_model, load_dataset_with_train_test_transforms
 
 
-DATASET_PATH = r"Samara_inverse"
+DATASET_PATH = r"../Samara"
 densenet121 = models.densenet121(pretrained=True)
 num_classes = 2
 densenet121.classifier = nn.Linear(densenet121.classifier.in_features, num_classes)
@@ -40,6 +40,6 @@ print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))
 
 
-num_epochs = 50
+num_epochs = 200
 train_model(densenet121, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
             dataset_name=DATASET_PATH, num_epochs=num_epochs)

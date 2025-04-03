@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader, random_split
 
 from utility import load_dataset_with_train_test_transforms, train_model
 
+# vit_ = models.vit_b_32(pretrained=False)
 vgg16 = models.vgg16(pretrained=False, num_classes=2)
 vgg16.name = "vgg16"
 num_classes = 2  # Укажите количество классов
@@ -51,17 +52,17 @@ test_transform = transforms.Compose([
 ])
 
 (train_dataset, val_dataset, train_data,
- val_data) = load_dataset_with_train_test_transforms("BHSig260-Hindi-refactored",
+ val_data) = load_dataset_with_train_test_transforms("../Samara_inverse",
                                                      train_transform=train_transform,
-                                                     test_transform=test_transform ,batch_size=8)
+                                                     test_transform=test_transform, batch_size=4)
 
 print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))
 
 
-num_epochs = 50
+num_epochs = 130
 best_acc = 0
 min_loss = 10 ** 10
 train_model(vgg16, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
-            dataset_name="BHSig260-Hindi-refactored",
+            dataset_name="Samara_inverse",
             num_epochs=num_epochs)

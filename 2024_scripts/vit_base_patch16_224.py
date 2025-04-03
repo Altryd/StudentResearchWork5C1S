@@ -60,7 +60,7 @@ test_transform = transforms.Compose([
 ])
 
 #Split dataset into train and validation
-path_to_dataset = r"CEDAR/signatures"
+path_to_dataset = r"../CEDAR/signatures"
 (train_dataset, val_dataset,
  train_data, val_data) = load_dataset_with_train_test_transforms(path_to_dataset,
                                                                  train_transform=train_transform,

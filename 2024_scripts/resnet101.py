@@ -54,7 +54,7 @@ test_transform_v101 = transforms.Compose([
 
 
 (train_dataset, val_dataset, train_data,
- val_data) = load_dataset_with_train_test_transforms("Samara_inverse",
+ val_data) = load_dataset_with_train_test_transforms("../Samara_inverse",
                                                      train_transform=test_transform_v101,
                                                      test_transform=test_transform_v101, batch_size=4)
 """

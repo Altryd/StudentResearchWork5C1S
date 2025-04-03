@@ -8,6 +8,8 @@ from torch.utils.data import DataLoader, random_split
 
 from utility import load_dataset_with_train_test_transforms, train_model
 
+eff_net = models.efficientnet_b0(pretrained=False)
+print(eff_net)
 efficientnet_b4 = models.efficientnet_b4(pretrained=False, num_classes=2)
 # num_classes = 2  # Укажите количество классов
 # efficientnet_b4.fc = nn.Linear(efficientnet_b4.fc.in_features, num_classes)
@@ -42,10 +44,10 @@ test_transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
-path_to_dataset = r"BHSig260-Hindi-refactored"
+path_to_dataset = r"../CEDAR"
 (train_dataset, val_dataset,
  train_data, val_data) = load_dataset_with_train_test_transforms(path_to_dataset,
-                                                                 train_transform=test_transform,
+                                                                 train_transform=train_transform,
                                                                  test_transform=test_transform,
                                                                  batch_size=4)
 
@@ -53,6 +55,6 @@ print("Number of training samples:", len(train_data))
 print("Number of validation samples:", len(val_data))
 
 
-num_epochs = 150
+num_epochs = 220
 train_model(efficientnet_b4, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
             dataset_name=path_to_dataset, num_epochs=num_epochs)

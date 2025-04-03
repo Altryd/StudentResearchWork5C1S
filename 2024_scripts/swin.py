@@ -10,7 +10,9 @@ from sklearn.model_selection import train_test_split
 
 from utility import train_model, load_dataset_with_train_test_transforms
 
-swin_b = models.swin_v2_b(num_classes=2)
+swin_b = models.swin_v2_b(pretrained=True)
+num_features = swin_b.head.in_features  # TODOOOOOOOOOOO Получаем количество входных признаков
+swin_b.head = torch.nn.Linear(num_features, 2)  # Заменяем на новый слой с 2 классами
 # swin_b = torch.load("swin_v2_b_Samara_inverse_trained.pth", weights_only=False)
 # swin_b.name = "swin_v2_b"
 
@@ -68,7 +70,7 @@ test_transform_swin_s = transforms.Compose([
     base_test_transform
 ])
 
-path_to_dataset = r"Samara"
+path_to_dataset = r"../Samara"
 """
 (train_dataset, val_dataset,
  train_data, val_data) = load_dataset_with_train_test_transforms(path_to_dataset,
