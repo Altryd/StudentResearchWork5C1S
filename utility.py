@@ -203,21 +203,34 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
 
 # создание модели
 def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None, device="cpu"):
+    """
+    Создает модель, указанную в model_name. Заменяет количество выходных классов модели на embedding_size
+    (для получения эмбеддингов)
+    :param model_name:
+    :param embedding_size:
+    :param pretrained_path:
+    :param device:
+    :return:
+    (model, train_transform, test_transform)
+    """
     train_transform = None
     test_transform = None
+    dict_of_transforms = {"resnet34": (train_transform_resnet_v34, test_transform_resnet_v34),
+                          "resnet101": (train_transform_resnet_v101, test_transform_resnet_v101),
+                          "efficientnet_b0": (train_transform_efficient_net_b0, test_transform_efficient_net_b0),
+                          "vit_b_32": (train_transform_vit_b_32, test_transform_vit_b_32),
+                          "vit_b_16": (train_transform_vit_b_16, test_transform_vit_b_16),
+                          "convnext_tiny": (train_transform_convnext_tiny, test_transform_convnext_tiny),
+                          "inception_resnet_v2": (train_transform_resnet_inception, test_transform_resnet_inception)}
     if model_name == "resnet34":
         model = models.resnet34(pretrained=True)
         # Заменяем последний слой на слой с нужным размером эмбеддинга
         num_ftrs = model.fc.in_features
         model.fc = nn.Linear(num_ftrs, embedding_size)
-        train_transform = train_transform_resnet_v34
-        test_transform = test_transform_resnet_v34
     elif model_name == "resnet101":
         model = models.resnet101(pretrained=True)
         num_ftrs = model.fc.in_features
         model.fc = nn.Linear(num_ftrs, embedding_size)
-        train_transform = train_transform_resnet_v101
-        test_transform = test_transform_resnet_v101
     elif model_name == "efficientnet_b0":
         model = models.efficientnet_b0(pretrained=True)
         num_ftrs = model.classifier[1].in_features
@@ -225,8 +238,6 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
                                                torch.nn.Linear(in_features=num_ftrs,
                                                                out_features=embedding_size,
                                                                bias=True))
-        train_transform = train_transform_efficient_net_b0
-        test_transform = test_transform_efficient_net_b0
     elif model_name == "vit_b_32":
         model = models.vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
         model.heads = torch.nn.Identity()
@@ -239,8 +250,6 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
                                                                out_features=EMBEDDING_SIZE,
                                                                bias=True))
         """
-        train_transform = train_transform_vit_b_32
-        test_transform = test_transform_vit_b_32
     elif model_name == "vit_b_16":
         model = models.vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
         model.heads = torch.nn.Identity()
@@ -253,8 +262,6 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
                                                                out_features=EMBEDDING_SIZE,
                                                                bias=True))
         """
-        train_transform = train_transform_vit_b_16
-        test_transform = test_transform_vit_b_16
     elif model_name == "convnext_tiny":
         model = models.convnext_tiny(pretrained=True)
         # print(model.classifier)
@@ -264,21 +271,60 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
                                                torch.nn.Flatten(start_dim=1, end_dim=-1),
                                                torch.nn.Linear(in_features=num_ftrs, out_features=embedding_size,
                                                                bias=True))
-        train_transform = train_transform_convnext_tiny
-        test_transform = test_transform_convnext_tiny
     elif model_name == "inception_resnet_v2":
         model = timm.create_model('inception_resnet_v2', pretrained=True,
                                   num_classes=embedding_size)
-        train_transform = train_transform_resnet_inception
-        test_transform = test_transform_resnet_inception
     else:
         raise ValueError(f"Unsupported model: {model_name}")
 
     if pretrained_path:
         model.load_state_dict(torch.load(pretrained_path, map_location=device, weights_only=True))
+        model_name = model.name
     else:
         model.name = model_name
+    train_transform, test_transform = dict_of_transforms[model_name]
     return model.to(device), train_transform, test_transform
+
+
+from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score, f1_score
+
+
+def calculate_metrics(all_distances, all_labels, threshold):
+    """
+    Высчитывает метрики по полученным расстояниям между эмбеддингами с использованием labels и threshold.
+    :param distances: Расстояния между эмбеддингами
+    :param labels: Лейблы (чаще всего 0 и 1)
+    :param threshold: Порог принятия решения о принадлежности к классу
+    :return:
+    Словарь с ключами threshold, roc_auc, average_precision, true_negative, false_positive, false_negative,
+    true_positive, accuracy, precision, recall, f1_score
+    """
+    # Бинаризация предсказаний по порогу
+    predictions = (all_distances <= threshold).astype(int)
+
+    # Вычисление метрик
+    roc_auc = roc_auc_score(all_labels,
+                            -all_distances)  # Используем -distances, так как меньшее расстояние = большее сходство
+    ap = average_precision_score(all_labels, -all_distances)
+    tn, fp, fn, tp = confusion_matrix(all_labels, predictions).ravel()
+    accuracy = accuracy_score(all_labels, predictions)
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = f1_score(all_labels, predictions)
+
+    return {
+        'threshold': threshold,
+        'roc_auc': roc_auc,
+        'average_precision': ap,
+        'true_negative': tn,
+        'false_positive': fp,
+        'false_negative': fn,
+        'true_positive': tp,
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1_score': f1
+    }
 
 
 # Реализация LayerNorm2d скопирована из torchvision.models.convnext !

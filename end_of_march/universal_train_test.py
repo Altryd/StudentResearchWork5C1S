@@ -16,7 +16,7 @@ from torchvision.models import ViT_B_16_Weights, ViT_B_32_Weights
 
 from used_transforms import *  # Предполагается, что это ваши трансформации
 from TransformDataset import TransformDataset
-from utility import load_dataset_with_train_test_transforms, create_model
+from utility import load_dataset_with_train_test_transforms, create_model, calculate_metrics
 import logging
 import time
 logger = logging.getLogger(__name__)
@@ -31,23 +31,6 @@ RANDOM_STATE = 111
 dataset_path = "datasets/march_1_full"
 dataset_name = dataset_path.split("/")[-1]
 SAVE_MODEL_EVERY_N_EPOCHS = 10
-
-
-# Функция для вычисления метрик
-def calculate_metrics(distances, labels, threshold):
-    predictions = (distances <= threshold).astype(int)
-    roc_auc = roc_auc_score(labels, -distances)  # Меньше расстояние = больше сходство
-    ap = average_precision_score(labels, -distances)
-    tn, fp, fn, tp = confusion_matrix(labels, predictions, labels=[0, 1]).ravel()
-    accuracy = accuracy_score(labels, predictions)
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = f1_score(labels, predictions)
-    return {
-        'threshold': threshold, 'roc_auc': roc_auc, 'ap': ap,
-        'tn': tn, 'fp': fp, 'fn': fn, 'tp': tp,
-        'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1
-    }
 
 
 # Функция для выбора триплетов (online triplet mining)
@@ -211,6 +194,17 @@ logger.info(f"EMBED_SIZE={EMBEDDING_SIZE}; MARGIN={MARGIN}; EPOCHS={EPOCHS}\n"
             f"MODEL={model.name}; OPTIMIZER={optimizer}\n"
             f"Triplets: {'SEMI-HARD' if use_semihard_negatives else 'HARD'}")
 
+best_test_metrics = {
+    'f1_score': 0.0,
+    'roc_auc': 0.0,
+    'average_precision': 0.0,
+    'epoch': -1,
+    'true_negative': 0,
+    'false_positive': 0,
+    'false_negative': 0,
+    'true_positive': 0,
+    'threshold': 0.0
+}
 
 for epoch in range(EPOCHS):
     torch.cuda.empty_cache()
@@ -229,15 +223,30 @@ for epoch in range(EPOCHS):
 
     # Вычисление метрик для разных порогов
     results = [calculate_metrics(distances, labels, t) for t in np.arange(0.1, 6.0, 0.25)]
-    best_result = max(results, key=lambda x: x['f1'])
-    logger.info(f"Best Threshold: {best_result['threshold']:.1f}, F1: {best_result['f1']:.4f}, "
-                f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['ap']:.4f}")
-    logger.info(f"TN: {best_result['tn']}, FP: {best_result['fp']}, FN: {best_result['fn']}, TP: {best_result['tp']}")
+    best_result = max(results, key=lambda x: x['f1_score'])
+    logger.info(f"Best Threshold: {best_result['threshold']:.1f}, F1: {best_result['f1_score']:.4f}, "
+                f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['average_precision']:.4f}")
+    logger.info(f"TN: {best_result['true_negative']}, FP: {best_result['false_positive']}, "
+                f"FN: {best_result['false_negative']}, TP: {best_result['true_positive']}")
+    if best_result['f1_score'] > best_test_metrics['f1_score']:
+        best_test_metrics.update({
+            'f1_score': best_result['f1_score'],
+            'roc_auc': best_result['roc_auc'],
+            'average_precision': best_result['average_precision'],
+            'epoch': epoch,
+            'true_negative': best_result['true_negative'],
+            'false_positive': best_result['false_positive'],
+            'false_negative': best_result['false_negative'],
+            'true_positive': best_result['true_positive'],
+            'threshold': best_result['threshold']
+        })
     if epoch % SAVE_MODEL_EVERY_N_EPOCHS == 0 and epoch > 0:
         torch.save(model.state_dict(), f"trained_models/{model.name}_trained_epoch_{epoch}.pth")
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f'Прошло времени  (секунды): {elapsed_time}')
+logger.info(f"BEST METRICS:\n{best_test_metrics}")
+
 
 # Сохранение модели (опционально)
 torch.save(model.state_dict(), f"trained_models/{model.name}_trained_epoch_{EPOCHS}.pth")

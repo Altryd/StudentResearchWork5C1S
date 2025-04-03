@@ -15,7 +15,8 @@ from torchvision.models import ViT_B_16_Weights, ViT_B_32_Weights
 
 from used_transforms import *
 from TransformDataset import TransformDataset
-from utility import load_dataset_with_train_test_transforms, load_dataset_with_train_test_valid_transforms, create_model
+from utility import (load_dataset_with_train_test_transforms, load_dataset_with_train_test_valid_transforms,
+                     create_model, calculate_metrics)
 import logging
 import time
 import datetime
@@ -33,35 +34,6 @@ dataset_path = "datasets/CEDAR_refactored"
 dataset_name = dataset_path.split("/")[-1]
 SAVE_MODEL_EVERY_N_EPOCHS = 10
 
-
-# Функция для вычисления метрик
-def calculate_metrics(all_distances, all_labels, threshold):
-    # Бинаризация предсказаний по порогу
-    predictions = (all_distances <= threshold).astype(int)
-
-    # Вычисление метрик
-    roc_auc = roc_auc_score(all_labels,
-                            -all_distances)  # Используем -distances, так как меньшее расстояние = большее сходство
-    ap = average_precision_score(all_labels, -all_distances)
-    tn, fp, fn, tp = confusion_matrix(all_labels, predictions).ravel()
-    accuracy = accuracy_score(all_labels, predictions)
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
-    f1 = f1_score(all_labels, predictions)
-
-    return {
-        'threshold': threshold,
-        'roc_auc': roc_auc,
-        'average_precision': ap,
-        'true_negative': tn,
-        'false_positive': fp,
-        'false_negative': fn,
-        'true_positive': tp,
-        'accuracy': accuracy,
-        'precision': precision,
-        'recall': recall,
-        'f1_score': f1
-    }
 
 
 # Функция для выбора триплетов (online triplet mining)
