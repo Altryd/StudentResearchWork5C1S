@@ -3,10 +3,12 @@ from torchvision import datasets
 
 
 class TransformDataset(torch.utils.data.Dataset):
-    def __init__(self, base_dataset, transformations):
+    def __init__(self, base_dataset, transformations, imgs=None, targets=None):
         super(TransformDataset, self).__init__()
         self.base = base_dataset
         self.transformations = transformations
+        self.imgs = imgs
+        self.targets = targets
 
     def __len__(self):
         return len(self.base)

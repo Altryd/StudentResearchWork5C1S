@@ -9,6 +9,13 @@ from sklearn.model_selection import train_test_split
 from TransformDataset import TransformDataset
 
 
+def load_dataset_full(dataset_path: str, batch_size=16, transform=None, shuffle=True):
+    dataset = datasets.ImageFolder(root=dataset_path)
+    train_data = TransformDataset(dataset, transform)
+    train_dataset = DataLoader(train_data, batch_size=batch_size, shuffle=shuffle)
+    return train_dataset, train_data
+
+
 def load_dataset(dataset_path: str, batch_size=4, transform=None, test_ratio=0.2):
     if transform:
         dataset = datasets.ImageFolder(root=dataset_path, transform=transform)
@@ -32,27 +39,94 @@ def load_dataset(dataset_path: str, batch_size=4, transform=None, test_ratio=0.2
 
     return train_dataset, val_dataset, train_data, val_data
 
-def load_dataset_with_train_test_transforms(dataset_path: str, train_transform, test_transform, batch_size=4, test_ratio=0.2):
+
+def load_dataset_with_train_test_transforms(dataset_path: str, train_transform,
+                                            test_transform,
+                                            batch_size=4, test_ratio=0.2, random_state=None,
+                                            all_shuffle=True):
+    """
+    if test_ratio == 1.0:
+        dataset = datasets.ImageFolder(root=dataset_path)
+        loader = DataLoader(dataset=dataset, shuffle=True)
+        train_dataset = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+        return loader
+    """
     dataset = datasets.ImageFolder(root=dataset_path)
-    loader = DataLoader(dataset=dataset, shuffle=True)
+    loader = DataLoader(dataset=dataset, shuffle=all_shuffle)
     print(dataset)
     # train_size = int(len(dataset)*train_ratio)
     # test_size = len(dataset) - train_size
     # print(dataset)
 
     # Split dataset into train and validation
+
+
     train_indices, val_indices = train_test_split(list(range(len(dataset.targets))), test_size=test_ratio,
-                                                  stratify=dataset.targets)
+                                                  stratify=dataset.targets, random_state=random_state)
     train_data = torch.utils.data.Subset(dataset, train_indices)
     train_data = TransformDataset(train_data, train_transform)
     val_data = torch.utils.data.Subset(dataset, val_indices)
     val_data = TransformDataset(val_data, test_transform)
 
     # Create DataLoader
-    train_dataset = DataLoader(train_data, batch_size=batch_size, shuffle=True)
-    val_dataset = DataLoader(val_data, batch_size=batch_size, shuffle=True)
+    train_dataset = DataLoader(train_data, batch_size=batch_size, shuffle=all_shuffle)
+    val_dataset = DataLoader(val_data, batch_size=batch_size, shuffle=all_shuffle)
 
     return train_dataset, val_dataset, train_data, val_data
+
+
+def load_dataset_with_train_test_valid_transforms(dataset_path: str, train_transform, validation_transform,
+                                            test_transform, batch_size=4, test_val_batch_size=None,
+                                                  test_val_ratio=0.2, val_ratio=0.5, random_state=None,
+                                            all_shuffle=True):
+    """
+    if test_ratio == 1.0:
+        dataset = datasets.ImageFolder(root=dataset_path)
+        loader = DataLoader(dataset=dataset, shuffle=True)
+        train_dataset = DataLoader(train_data, batch_size=batch_size, shuffle=True)
+        return loader
+    """
+    if not test_val_batch_size:
+        test_val_batch_size = batch_size
+    dataset = datasets.ImageFolder(root=dataset_path)
+    loader = DataLoader(dataset=dataset, shuffle=all_shuffle)
+    print(dataset)
+    # train_size = int(len(dataset)*train_ratio)
+    # test_size = len(dataset) - train_size
+    # print(dataset)
+
+    # Split dataset into train and validation
+
+    train_indices, test_val_indices = train_test_split(list(range(len(dataset.targets))),
+                                                       test_size=test_val_ratio,
+                                                       stratify=dataset.targets, random_state=random_state)
+
+    test_indices, val_indices = train_test_split(test_val_indices,
+                                                 stratify=[dataset.targets[i] for i in test_val_indices],
+                                                 test_size=val_ratio,
+                                                 random_state=random_state)
+
+    train_data = torch.utils.data.Subset(dataset, train_indices)
+    train_data = TransformDataset(train_data, train_transform, imgs=[dataset.imgs[i] for i in train_indices],
+                                  targets=[dataset.targets[i] for i in train_indices])
+
+    val_data = torch.utils.data.Subset(dataset, val_indices)
+    val_data = TransformDataset(val_data, validation_transform, imgs=[dataset.imgs[i] for i in val_indices],
+                                targets=[dataset.targets[i] for i in val_indices])
+
+    test_data = torch.utils.data.Subset(dataset, test_indices)
+    test_data = TransformDataset(test_data, test_transform, imgs=[dataset.imgs[i] for i in test_indices],
+                                 targets=[dataset.targets[i] for i in test_indices])
+
+    # Create DataLoader
+    train_dataset = DataLoader(train_data, batch_size=batch_size, shuffle=all_shuffle)
+    if test_val_batch_size == -1:
+        test_val_batch_size = len(val_data)
+    val_dataset = DataLoader(val_data, batch_size=test_val_batch_size, shuffle=all_shuffle)
+    test_dataset = DataLoader(test_data, batch_size=test_val_batch_size, shuffle=all_shuffle)
+
+    return train_dataset, val_dataset, test_dataset, train_data, val_data, test_data
+
 
 
 def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_data, val_data,
