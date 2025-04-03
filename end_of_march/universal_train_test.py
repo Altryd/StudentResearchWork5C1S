@@ -16,7 +16,7 @@ from torchvision.models import ViT_B_16_Weights, ViT_B_32_Weights
 
 from used_transforms import *  # Предполагается, что это ваши трансформации
 from TransformDataset import TransformDataset
-from utility import load_dataset_with_train_test_transforms
+from utility import load_dataset_with_train_test_transforms, create_model
 import logging
 import time
 logger = logging.getLogger(__name__)
@@ -31,86 +31,6 @@ RANDOM_STATE = 111
 dataset_path = "datasets/march_1_full"
 dataset_name = dataset_path.split("/")[-1]
 SAVE_MODEL_EVERY_N_EPOCHS = 10
-
-
-# создание модели
-def create_model(model_name="resnet34", embedding_size=EMBEDDING_SIZE, pretrained_path=None, device="cpu"):
-    train_transform = None
-    test_transform = None
-    if model_name == "resnet34":
-        model = models.resnet34(pretrained=True)
-        # Заменяем последний слой на слой с нужным размером эмбеддинга
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, embedding_size)
-        train_transform = train_transform_resnet_v34
-        test_transform = test_transform_resnet_v34
-    elif model_name == "resnet101":
-        model = models.resnet101(pretrained=True)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, embedding_size)
-        train_transform = train_transform_resnet_v101
-        test_transform = test_transform_resnet_v101
-    elif model_name == "efficientnet_b0":
-        model = models.efficientnet_b0(pretrained=True)
-        num_ftrs = model.classifier[1].in_features
-        model.classifier = torch.nn.Sequential(torch.nn.Dropout(p=0.4, inplace=True),
-                                               torch.nn.Linear(in_features=num_ftrs,
-                                                               out_features=EMBEDDING_SIZE,
-                                                               bias=True))
-        train_transform = train_transform_efficient_net_b0
-        test_transform = test_transform_efficient_net_b0
-    elif model_name == "vit_b_32":
-        model = models.vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
-        model.heads = torch.nn.Identity()
-        # TODO: model.heads = nn.Linear(768, out_features=EMBEDDING_SIZE)  # Новая размерность, например, 128
-        # Это может быть полезно
-        """
-        num_ftrs = model.classifier[1].in_features
-        model.classifier = torch.nn.Sequential(torch.nn.Dropout(p=0.4, inplace=True),
-                                               torch.nn.Linear(in_features=num_ftrs,
-                                                               out_features=EMBEDDING_SIZE,
-                                                               bias=True))
-        """
-        train_transform = train_transform_vit_b_32
-        test_transform = test_transform_vit_b_32
-    elif model_name == "vit_b_16":
-        model = models.vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
-        model.heads = torch.nn.Identity()
-        # TODO: model.heads = nn.Linear(768, out_features=EMBEDDING_SIZE)  # Новая размерность, например, 128
-        # Это может быть полезно
-        """
-        num_ftrs = model.classifier[1].in_features
-        model.classifier = torch.nn.Sequential(torch.nn.Dropout(p=0.4, inplace=True),
-                                               torch.nn.Linear(in_features=num_ftrs,
-                                                               out_features=EMBEDDING_SIZE,
-                                                               bias=True))
-        """
-        train_transform = train_transform_vit_b_16
-        test_transform = test_transform_vit_b_16
-    elif model_name == "convnext_tiny":
-        model = models.convnext_tiny(pretrained=True)
-        # print(model.classifier)
-        num_ftrs = model.classifier[0].normalized_shape[0]
-        from utility import LayerNorm2d
-        model.classifier = torch.nn.Sequential(LayerNorm2d((num_ftrs,), eps=1e-6, elementwise_affine=True),
-                                               torch.nn.Flatten(start_dim=1, end_dim=-1),
-                                               torch.nn.Linear(in_features=num_ftrs, out_features=EMBEDDING_SIZE,
-                                                               bias=True))
-        train_transform = train_transform_convnext_tiny
-        test_transform = test_transform_convnext_tiny
-    elif model_name == "inception_resnet_v2":
-        model = timm.create_model('inception_resnet_v2', pretrained=True,
-                                  num_classes=EMBEDDING_SIZE)
-        train_transform = train_transform_resnet_inception
-        test_transform = test_transform_resnet_inception
-    else:
-        raise ValueError(f"Unsupported model: {model_name}")
-
-    if pretrained_path:
-        model.load_state_dict(torch.load(pretrained_path, map_location=device, weights_only=True))
-    else:
-        model.name = model_name
-    return model.to(device), train_transform, test_transform
 
 
 # Функция для вычисления метрик
