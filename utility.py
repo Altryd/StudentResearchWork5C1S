@@ -196,3 +196,16 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
     torch.save(model, f'{model_name}_{dataset_name}_trained.pth')
     pass
 
+
+# Реализация LayerNorm2d скопирована из torchvision.models.convnext !
+import torch
+from torch import nn, Tensor
+from torch.nn import functional as F
+
+
+class LayerNorm2d(nn.LayerNorm):
+    def forward(self, x: Tensor) -> Tensor:
+        x = x.permute(0, 2, 3, 1)
+        x = F.layer_norm(x, self.normalized_shape, self.weight, self.bias, self.eps)
+        x = x.permute(0, 3, 1, 2)
+        return x

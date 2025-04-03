@@ -2,6 +2,7 @@
 import datetime
 import re
 import numpy as np
+import timm
 import torch
 import torch.nn as nn
 from torch.nn import PairwiseDistance
@@ -97,6 +98,11 @@ def create_model(model_name="resnet34", embedding_size=EMBEDDING_SIZE, pretraine
                                                                bias=True))
         train_transform = train_transform_convnext_tiny
         test_transform = test_transform_convnext_tiny
+    elif model_name == "inception_resnet_v2":
+        model = timm.create_model('inception_resnet_v2', pretrained=True,
+                                  num_classes=EMBEDDING_SIZE)
+        train_transform = train_transform_resnet_inception
+        test_transform = test_transform_resnet_inception
     else:
         raise ValueError(f"Unsupported model: {model_name}")
 
