@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import gc
 import re
 import numpy as np
 import timm
@@ -38,44 +39,45 @@ SAVE_MODEL_EVERY_N_EPOCHS = 10
 
 # Функция для выбора триплетов (online triplet mining)
 def select_triplets(embeddings, labels, use_semihard=False, margin=MARGIN):
-    triplets = []
-    labels = labels.cpu().numpy()
-    unique_labels = np.unique(labels)
+    with torch.no_grad():
+        triplets = []
+        labels = labels.cpu().numpy()
+        unique_labels = np.unique(labels)
 
-    for pos_class in unique_labels:
-        pos_mask = labels == pos_class
-        neg_mask = ~pos_mask  # logical inverse
-        pos_indices = np.where(pos_mask)[0]
-        neg_indices = np.where(neg_mask)[0]
+        for pos_class in unique_labels:
+            pos_mask = labels == pos_class
+            neg_mask = ~pos_mask  # logical inverse
+            pos_indices = np.where(pos_mask)[0]
+            neg_indices = np.where(neg_mask)[0]
 
-        if len(pos_indices) < 2:  # Нужны как минимум 2 примера для positive
-            continue
+            if len(pos_indices) < 2:  # Нужны как минимум 2 примера для positive
+                continue
 
-        for anchor_idx, pos_idx in itertools.combinations(pos_indices, 2):
-            anchor_emb = embeddings[anchor_idx]
-            pos_emb = embeddings[pos_idx]
-            neg_embs = embeddings[neg_indices]
+            for anchor_idx, pos_idx in itertools.combinations(pos_indices, 2):
+                anchor_emb = embeddings[anchor_idx]
+                pos_emb = embeddings[pos_idx]
+                neg_embs = embeddings[neg_indices]
 
-            # Вычисление расстояний
-            pos_dist = l2_distance(anchor_emb.unsqueeze(0), pos_emb.unsqueeze(0)).item()
-            neg_dists = l2_distance(anchor_emb.unsqueeze(0).expand_as(neg_embs), neg_embs)
+                # Вычисление расстояний
+                pos_dist = l2_distance(anchor_emb.unsqueeze(0), pos_emb.unsqueeze(0)).item()
+                neg_dists = l2_distance(anchor_emb.unsqueeze(0).expand_as(neg_embs), neg_embs)
 
-            if use_semihard:
-                # Semi-hard: pos_dist < neg_dist < pos_dist + margin
-                valid_mask = (pos_dist < neg_dists) & (neg_dists < pos_dist + margin)
-                valid_neg_indices = neg_indices[valid_mask.cpu().numpy()]
-                if len(valid_neg_indices) > 0:
-                    neg_idx = np.random.choice(valid_neg_indices)
-                    triplets.append((anchor_idx, pos_idx, neg_idx))
-            else:
-                # Hard: neg_dist < pos_dist
-                valid_mask = neg_dists < pos_dist
-                valid_neg_indices = neg_indices[valid_mask.cpu().numpy()]
-                if len(valid_neg_indices) > 0:
-                    neg_idx = valid_neg_indices[np.argmin(neg_dists[valid_mask].cpu().detach().numpy())]
-                    triplets.append((anchor_idx, pos_idx, neg_idx))
+                if use_semihard:
+                    # Semi-hard: pos_dist < neg_dist < pos_dist + margin
+                    valid_mask = (pos_dist < neg_dists) & (neg_dists < pos_dist + margin)
+                    valid_neg_indices = neg_indices[valid_mask.cpu().numpy()]
+                    if len(valid_neg_indices) > 0:
+                        neg_idx = np.random.choice(valid_neg_indices)
+                        triplets.append((anchor_idx, pos_idx, neg_idx))
+                else:
+                    # Hard: neg_dist < pos_dist
+                    valid_mask = neg_dists < pos_dist
+                    valid_neg_indices = neg_indices[valid_mask.cpu().numpy()]
+                    if len(valid_neg_indices) > 0:
+                        neg_idx = valid_neg_indices[np.argmin(neg_dists[valid_mask].cpu().detach().numpy())]
+                        triplets.append((anchor_idx, pos_idx, neg_idx))
 
-    return triplets
+        return triplets
 
 
 # Функция обучения одной эпохи
@@ -93,6 +95,9 @@ def train_epoch(model, dataloader, loss_fn, optimizer, use_semihard=False):
 
         # Выбор триплетов
         triplets = select_triplets(embeddings, labels, use_semihard=use_semihard)
+        print("number of triplets", len(triplets))
+        print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
+        print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
         if not triplets:
             continue
 
@@ -189,7 +194,7 @@ l2_distance = PairwiseDistance(p=2)
                                                                       random_state=RANDOM_STATE,
                                                                       all_shuffle=False)
 
-use_semihard_negatives = False  # Переключатель для semi-hard/hard negatives
+use_semihard_negatives = True  # Переключатель для semi-hard/hard negatives
 current_date = f"{datetime.datetime.now().day}-{datetime.datetime.now().month}"
 
 if use_semihard_negatives:
@@ -216,18 +221,27 @@ best_test_metrics = {
     'threshold': 0.0
 }
 
+print(f"Параметры модели: {sum(p.numel() for p in model.parameters()) / 1e6:.2f} млн")
+print(f"Память под веса: {sum(p.numel() * p.element_size() for p in model.parameters()) / 1024 ** 2:.2f} МБ")
 for epoch in range(EPOCHS):
     torch.cuda.empty_cache()
     start_time = time.time()
     logger.info(f"\nEpoch {epoch + 1}/{EPOCHS}")
 
+    print(f"epoch: {epoch}")
     # Обучение
     avg_loss, num_triplets = train_epoch(model, train_dataset, triplet_loss, optimizer,
                                          use_semihard=use_semihard_negatives)
     logger.info(f"Avg Loss: {avg_loss:.4f}, Valid Triplets: {num_triplets}")
 
+    print("Приступаем к валидации")
+    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
+    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
     # Оценка на valid наборе
     distances, labels = evaluate(model, val_dataset, val_dataset.dataset.base.dataset.class_to_idx, l2_distance)
+    print("после evaluate")
+    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
+    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
 
     # Вычисление метрик для разных порогов
     results = [calculate_metrics(distances, labels, t) for t in np.arange(0.1, 6.0, 0.5)]
@@ -240,8 +254,14 @@ for epoch in range(EPOCHS):
                 f"FN: {best_result['false_negative']}, TP: {best_result['true_positive']}")
 
     best_threshold = best_result['threshold']
+    print("Приступаем к тестам")
+    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
+    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
     test_distances, test_labels = evaluate(model, test_dataset, test_dataset.dataset.base.dataset.class_to_idx,
                                            l2_distance)
+    print("после evaluate")
+    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
+    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
 
     test_result = calculate_metrics(test_distances, test_labels, best_threshold)
     logger.info(f"Test result for epoch {epoch}: F1: {test_result['f1_score']:.4f}, "
@@ -265,6 +285,7 @@ for epoch in range(EPOCHS):
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f'Прошло времени  (секунды): {elapsed_time}')
+    gc.collect()
 logger.info(f"BEST METRICS:\n{best_test_metrics}")
 
 # Сохранение модели

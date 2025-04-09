@@ -234,10 +234,16 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
     elif model_name == "efficientnet_b0":
         model = models.efficientnet_b0(pretrained=True)
         num_ftrs = model.classifier[1].in_features
-        model.classifier = torch.nn.Sequential(torch.nn.Dropout(p=0.4, inplace=True),
-                                               torch.nn.Linear(in_features=num_ftrs,
+        """
+        model.classifier = torch.nn.Sequential(torch.nn.Linear(in_features=num_ftrs,
                                                                out_features=embedding_size,
                                                                bias=True))
+        """
+        model.classifier = torch.nn.Sequential(
+            torch.nn.Dropout(p=0.2, inplace=True),
+            torch.nn.Linear(in_features=num_ftrs, out_features=embedding_size, bias=True),
+            torch.nn.BatchNorm1d(embedding_size)
+        )
     elif model_name == "vit_b_32":
         model = models.vit_b_32(weights=ViT_B_32_Weights.IMAGENET1K_V1)
         model.heads = torch.nn.Identity()

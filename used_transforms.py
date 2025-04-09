@@ -58,6 +58,7 @@ test_transform_efficient_net_b2 = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+"""
 train_transform_efficient_net_b0 = transforms.Compose([
     transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BICUBIC),
     transforms.CenterCrop((224, 224)),
@@ -66,6 +67,16 @@ train_transform_efficient_net_b0 = transforms.Compose([
     transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
     transforms.ToTensor(),
     transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+"""
+
+train_transform_efficient_net_b0 = transforms.Compose([
+    transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BICUBIC),
+    transforms.RandomResizedCrop((224, 224), scale=(0.9, 1.0)),
+    transforms.RandomRotation(10),  # уменьшенные углы
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),  # уменьшенные искажения
+    transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
@@ -80,11 +91,11 @@ test_transform_efficient_net_b0 = transforms.Compose([
 train_transform_resnet_v101 = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.CenterCrop((224, 224)),
-    transforms.RandomRotation(25),
-    transforms.RandomGrayscale(p=0.1),
-    transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
+    transforms.RandomRotation(10),
+    # transforms.RandomGrayscale(p=0.1),
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),
     transforms.ToTensor(),
-    transforms.GaussianNoise(),
+    # transforms.GaussianNoise(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
@@ -98,9 +109,9 @@ test_transform_resnet_v101 = transforms.Compose([
 train_transform_resnet_v34 = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.CenterCrop((224, 224)),
-    transforms.RandomRotation(25),
-    transforms.RandomGrayscale(p=0.1),
-    transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
+    transforms.RandomRotation(10),
+    transforms.RandomGrayscale(p=0.05),
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),
     transforms.ToTensor(),
     transforms.GaussianNoise(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -113,6 +124,7 @@ test_transform_resnet_v34 = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
+"""
 train_transform_resnet_inception = transforms.Compose([
     transforms.Resize((299, 299)),
     transforms.CenterCrop((299, 299)),
@@ -121,6 +133,16 @@ train_transform_resnet_inception = transforms.Compose([
     transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
     transforms.ToTensor(),
     transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+"""
+train_transform_resnet_inception = transforms.Compose([
+    transforms.Resize((299, 299)),
+    transforms.CenterCrop((299, 299)),
+    transforms.RandomRotation(10),
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),
+    transforms.ToTensor(),
+    # transforms.GaussianNoise(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
