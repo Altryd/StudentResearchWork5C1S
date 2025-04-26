@@ -221,7 +221,9 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
                           "vit_b_32": (train_transform_vit_b_32, test_transform_vit_b_32),
                           "vit_b_16": (train_transform_vit_b_16, test_transform_vit_b_16),
                           "convnext_tiny": (train_transform_convnext_tiny, test_transform_convnext_tiny),
-                          "inception_resnet_v2": (train_transform_resnet_inception, test_transform_resnet_inception)}
+                          "inception_resnet_v2": (train_transform_resnet_inception, test_transform_resnet_inception),
+                          "mobilenet_v3_small": (train_transform_mobilenet_v3_small, test_transform_mobilenet_v3_small),
+                          "mobilenet_v3_large": (train_transform_mobilenet_v3_small, test_transform_mobilenet_v3_small)}
     if model_name == "resnet34":
         model = models.resnet34(pretrained=True)
         # Заменяем последний слой на слой с нужным размером эмбеддинга
@@ -280,12 +282,37 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
     elif model_name == "inception_resnet_v2":
         model = timm.create_model('inception_resnet_v2', pretrained=True,
                                   num_classes=embedding_size)
+    elif model_name == "mobilenet_v3_small":
+        model = models.mobilenet_v3_small(pretrained=True)
+        first_num_fltrs = model.classifier[0].in_features
+        num_ftrs_second = model.classifier[3].in_features
+
+        model.classifier = torch.nn.Sequential(
+            nn.Linear(in_features=first_num_fltrs, out_features=num_ftrs_second, bias=True),
+            nn.Hardswish(),
+            nn.Dropout(p=0.2, inplace=True),
+            nn.Linear(in_features=num_ftrs_second, out_features=embedding_size, bias=True),
+        )
+    elif model_name == "mobilenet_v3_large":
+        model = models.mobilenet_v3_large(pretrained=True)
+        first_num_fltrs = model.classifier[0].in_features
+        num_ftrs_second = model.classifier[3].in_features
+
+        model.classifier = torch.nn.Sequential(
+            nn.Linear(in_features=first_num_fltrs, out_features=num_ftrs_second, bias=True),
+            nn.Hardswish(),
+            nn.Dropout(p=0.2, inplace=True),
+            nn.Linear(in_features=num_ftrs_second, out_features=embedding_size, bias=True),
+        )
     else:
         raise ValueError(f"Unsupported model: {model_name}")
 
     if pretrained_path:
-        model.load_state_dict(torch.load(pretrained_path, map_location=device, weights_only=True))
-        model_name = model.name
+        model.load_state_dict(torch.load(pretrained_path, map_location=device, weights_only=False))
+        try:
+            model_name = model.name
+        except:
+            model.name = model_name
     else:
         model.name = model_name
     train_transform, test_transform = dict_of_transforms[model_name]

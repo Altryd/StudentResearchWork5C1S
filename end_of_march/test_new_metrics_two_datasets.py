@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import gc
+import datetime
 import re
 import numpy as np
 import timm
@@ -14,27 +14,27 @@ import itertools
 
 from torchvision.models import ViT_B_16_Weights, ViT_B_32_Weights
 
-from used_transforms import *
+from used_transforms import *  # Предполагается, что это ваши трансформации
 from TransformDataset import TransformDataset
-from utility import (load_dataset_with_train_test_transforms, load_dataset_with_train_test_valid_transforms,
-                     create_model, calculate_metrics)
+from utility import load_dataset_with_train_test_transforms, load_dataset_full, create_model, calculate_metrics
 import logging
 import time
-import datetime
-
 logger = logging.getLogger(__name__)
+
 
 # Глобальные константы
 EMBEDDING_SIZE = 128
 MARGIN = 1.0
-EPOCHS = 75
-BATCH_SIZE = 264
-TEST_VAL_BATCH_SIZE = -1
+EPOCHS = 50
+BATCH_SIZE = 50
 RANDOM_STATE = 111
-dataset_path = "datasets/CEDAR_refactored"
+dataset_path = "datasets/march_1_full"
+second_dataset_path = "datasets/april_6signatures"
+# second_dataset_path = None
 dataset_name = dataset_path.split("/")[-1]
-SAVE_MODEL_EVERY_N_EPOCHS = 10
-
+if second_dataset_path:
+    second_dataset_name = second_dataset_path.split("/")[-1]
+SAVE_MODEL_EVERY_N_EPOCHS = 20
 
 
 # Функция для выбора триплетов (online triplet mining)
@@ -167,18 +167,14 @@ def evaluate(model, dataloader, class_to_idx, l2_distance):
 
     # Считаем расстояния между всеми нужными парами
     for gen_class in class_to_idx:
-        if "gen" not in gen_class and "orig" not in gen_class:
+        if "gen" not in gen_class:
             continue  # Пропускаем поддельные классы
-
 
         num_class = re.findall(r"\d+", gen_class)[0]  # ID пользователя
         name = gen_class[re.search("\d+", gen_class).end():]  # Имя
         forg_class = f"forg_{num_class}{name}"  # Поддельный класс
         gen_embs = embeddings_dict[gen_class]
         forg_embs = embeddings_dict.get(forg_class, None)
-        if forg_embs is None:
-            forg_class = f"forged_{num_class}{name}"
-            forg_embs = embeddings_dict.get(forg_class, None)
 
         # Positive-Positive (внутри класса)
         if gen_embs is not None and len(gen_embs) > 1:
@@ -235,7 +231,7 @@ print(f"Using device: {device}")
 # Загрузка модели
 model, train_transform, test_transform = create_model(model_name="resnet34",
                                                       embedding_size=EMBEDDING_SIZE,
-                                                      pretrained_path=None,
+                                                      pretrained_path="trained_models/resnet34_trained_march_3_and_march_3_test-real_with_all_forged_epoch_50.pth",
                                                       device=device)
 
 # Оптимизатор и потери
@@ -243,34 +239,38 @@ triplet_loss = nn.TripletMarginLoss(margin=MARGIN)
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 l2_distance = PairwiseDistance(p=2)
 
-(train_dataset, val_dataset, test_dataset, train_data,
- val_data, test_data) = load_dataset_with_train_test_valid_transforms(dataset_path,
-                                                                      train_transform=train_transform,
-                                                                      test_transform=test_transform,
-                                                                      validation_transform=test_transform,
-                                                                      test_val_ratio=0.375, val_ratio=0.5,
-                                                                      batch_size=BATCH_SIZE,
-                                                                      test_val_batch_size=TEST_VAL_BATCH_SIZE,
-                                                                      random_state=RANDOM_STATE,
-                                                                      all_shuffle=False)
+"""
+train_dataset, _, _, _ = load_dataset_with_train_test_transforms(
+    dataset_path, train_transform=train_transform, test_ratio=0.2,
+    test_transform=test_transform, batch_size=BATCH_SIZE, random_state=RANDOM_STATE, all_shuffle=False
+)
+"""
+
+if second_dataset_path:
+    train_dataset, _ = load_dataset_full(
+        dataset_path, transform=train_transform, batch_size=BATCH_SIZE, shuffle=False
+    )
+
+    test_dataset, _ = load_dataset_full(
+        second_dataset_path, transform=test_transform, batch_size=BATCH_SIZE, shuffle=False
+    )
+else:
+    train_dataset, test_dataset, _, _ = load_dataset_with_train_test_transforms(
+        dataset_path, train_transform=train_transform, test_ratio=0.2,
+        test_transform=test_transform, batch_size=BATCH_SIZE, random_state=RANDOM_STATE, all_shuffle=False
+    )
 
 use_hard_negatives = False  # Переключатель для semi-hard/hard negatives
 current_date = f"{datetime.datetime.now().day}-{datetime.datetime.now().month}"
 
+
 """
 if use_semihard_negatives:
-    logging.basicConfig(filename=f'logs/semi_{model.name}_dataset_{dataset_name}_{current_date}.log',
-                        level=logging.INFO)
+    logging.basicConfig(filename=f'logs/semi_{model.name}_dataset_{dataset_name}_{current_date}.log', level=logging.INFO)
 else:
     logging.basicConfig(filename=f'logs/{model.name}_dataset_{dataset_name}_{current_date}.log', level=logging.INFO)
-logger.info(f"EMBED_SIZE={EMBEDDING_SIZE}; MARGIN={MARGIN}; EPOCHS={EPOCHS}\n"
-            f"BATCH_SIZE={BATCH_SIZE}; TEST_VAL_BATCH_SIZE={TEST_VAL_BATCH_SIZE}; "
-            f"RANDOM_STATE={RANDOM_STATE}; DATASET={dataset_path}\n"
-            f"MODEL={model.name}; OPTIMIZER={optimizer}\n"
-            f"Triplets: {'SEMI-HARD' if use_semihard_negatives else 'HARD'}"
-            f"\nTRAIN TEST VALIDATION SPLIT")
 """
-logging.basicConfig(filename=f'logs/new_metrics_combined_tripl_{model.name}_dataset_{dataset_name}_{current_date}.log',
+logging.basicConfig(filename=f'logs/TESTING_new_metrics_combined_tripl_{model.name}_dataset_{dataset_name}_{current_date}.log',
                     level=logging.INFO)
 
 
@@ -280,8 +280,7 @@ logger.info(f"EMBED_SIZE={EMBEDDING_SIZE}; MARGIN={MARGIN}; EPOCHS={EPOCHS}\n"
             f"Triplets: combined"
             f"TRANSFORMS:"
             f"Train={train_transform}"
-            f"Test={test_transform}"
-            f"\nTRAIN TEST VALIDATION SPLIT")
+            f"Test={test_transform}")
             # f"Triplets: {'SEMI-HARD' if use_hard_negatives else 'HARD'}")
 
 best_test_metrics = {
@@ -296,89 +295,38 @@ best_test_metrics = {
     'threshold': 0.0
 }
 
-print(f"Параметры модели: {sum(p.numel() for p in model.parameters()) / 1e6:.2f} млн")
-print(f"Память под веса: {sum(p.numel() * p.element_size() for p in model.parameters()) / 1024 ** 2:.2f} МБ")
-for epoch in range(EPOCHS):
-    torch.cuda.empty_cache()
-    start_time = time.time()
-    logger.info(f"\nEpoch {epoch}/{EPOCHS}")
+# Оценка на тестовом наборе
+if second_dataset_path:
+    # distances, labels = evaluate(model, test_dataset, test_dataset.dataset.base.class_to_idx, l2_distance)
+    all_distances = evaluate(model, test_dataset, test_dataset.dataset.base.class_to_idx, l2_distance)
+else:
+    # distances, labels = evaluate(model, test_dataset, test_dataset.dataset.base.dataset.class_to_idx, l2_distance)
+    all_distances = evaluate(model, test_dataset, test_dataset.dataset.base.dataset.class_to_idx, l2_distance)
 
-    print(f"epoch: {epoch}")
-    # Обучение
-    avg_loss, num_triplets = train_epoch(model, train_dataset, triplet_loss, optimizer,
-                                         use_hard=use_hard_negatives)
-    logger.info(f"Avg Loss: {avg_loss:.4f}, Valid Triplets: {num_triplets}")
-    if num_triplets < 10 and not use_hard_negatives:
-        use_hard_negatives = True
-        logger.info(f"The number of triplets is less than 10. Start including hard triplets")
-    elif num_triplets < 10:
-        MARGIN += 0.5
-        logger.info(f"The number of triplets is less than 10. improved Margin to {MARGIN}")
-    triplet_loss = nn.TripletMarginLoss(margin=MARGIN)  # TODO: ?
+for key, dists in all_distances.items():
+    print(
+        f"{key}: mean={np.mean(dists):.4f}, median={np.median(dists):.4f}, min={np.min(dists):.4f}, max={np.max(dists):.4f}")
 
-    print("Приступаем к валидации")
-    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
-    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
-    # Оценка на valid наборе
-    distances = evaluate(model, val_dataset, val_dataset.dataset.base.dataset.class_to_idx, l2_distance)
-    print("VALIDATION")
-    for key, dists in distances.items():
-        print(
-            f"{key}: mean={np.mean(dists):.4f}, median={np.median(dists):.4f}, min={np.min(dists):.4f}, max={np.max(dists):.4f}")
-    print("после evaluate")
-    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
-    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
-
-    # Вычисление метрик для разных порогов
-    results = [compute_metrics_from_evaluation(distances, t) for t in np.arange(0.1, 30, 0.25)]
-    best_result = max(results, key=lambda x: x['f1_score'])
-    torch.cuda.empty_cache()
-
-    logger.info(f"[VALIDATION] "
-                f"Best Threshold for epoch {epoch}: {best_result['threshold']:.1f}, F1: {best_result['f1_score']:.4f}, "
-                f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['average_precision']:.4f}")
-    logger.info(f"TN: {best_result['true_negative']}, FP: {best_result['false_positive']}, "
-                f"FN: {best_result['false_negative']}, TP: {best_result['true_positive']}")
-
-    best_threshold = best_result['threshold']
-    print("Приступаем к тестам")
-    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
-    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
-    test_distances = evaluate(model, test_dataset, test_dataset.dataset.base.dataset.class_to_idx,
-                                           l2_distance)
-    print("TEST")
-    for key, dists in test_distances.items():
-        print(
-            f"{key}: mean={np.mean(dists):.4f}, median={np.median(dists):.4f}, min={np.min(dists):.4f}, max={np.max(dists):.4f}")
-    print("после evaluate")
-    print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
-    print(f"Reserved: {torch.cuda.memory_reserved(device) / 1024 ** 3:.2f} GiB")
-
-    test_result = compute_metrics_from_evaluation(test_distances, best_threshold)
-    logger.info(f"Test result for epoch {epoch}: F1: {test_result['f1_score']:.4f}, "
-                f"ROC-AUC: {test_result['roc_auc']:.4f}, AP: {test_result['average_precision']:.4f}")
-    logger.info(f"TN: {test_result['true_negative']}, FP: {test_result['false_positive']}, "
-                f"FN: {test_result['false_negative']}, TP: {test_result['true_positive']}")
-    if test_result['f1_score'] > best_test_metrics['f1_score']:
-        best_test_metrics.update({
-            'f1_score': test_result['f1_score'],
-            'roc_auc': test_result['roc_auc'],
-            'average_precision': test_result['average_precision'],
-            'epoch': epoch,
-            'true_negative': test_result['true_negative'],
-            'false_positive': test_result['false_positive'],
-            'false_negative': test_result['false_negative'],
-            'true_positive': test_result['true_positive'],
-            'threshold': best_threshold
-        })
-    if epoch % SAVE_MODEL_EVERY_N_EPOCHS == 0 and epoch > 0:
-        torch.save(model.state_dict(), f"trained_models/{model.name}_trained_{dataset_name}_epoch_{epoch}.pth")
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    logger.info(f'Прошло времени  (секунды): {elapsed_time}')
-    gc.collect()
-logger.info(f"BEST METRICS:\n{best_test_metrics}")
-
-# Сохранение модели
-torch.save(model.state_dict(), f"trained_models/{model.name}_trained_{dataset_name}_epoch_{EPOCHS}.pth")
-
+# Вычисление метрик для разных порогов
+results = [compute_metrics_from_evaluation(all_distances, t) for t in np.arange(0.1, 800, 0.25)]
+best_result = max(results, key=lambda x: x['f1_score'])
+if second_dataset_path:
+    logger.info(f"First dataset: {dataset_path} ; Second dataset was: {second_dataset_path}")
+logger.info(f"Best Threshold: {best_result['threshold']:.1f}, F1: {best_result['f1_score']:.4f}, "
+            f"ROC-AUC: {best_result['roc_auc']:.4f}, AP: {best_result['average_precision']:.4f}")
+logger.info(f"TN: {best_result['true_negative']}, FP: {best_result['false_positive']}, "
+            f"FN: {best_result['false_negative']}, TP: {best_result['true_positive']}"
+            f"Accuracy: {best_result['accuracy']} Precision: {best_result['precision']}; "
+            f"Recall: {best_result['recall']}")
+if best_result['f1_score'] > best_test_metrics['f1_score']:
+    best_test_metrics.update({
+        'f1_score': best_result['f1_score'],
+        'roc_auc': best_result['roc_auc'],
+        'average_precision': best_result['average_precision'],
+        'epoch': 0,
+        'true_negative': best_result['true_negative'],
+        'false_positive': best_result['false_positive'],
+        'false_negative': best_result['false_negative'],
+        'true_positive': best_result['true_positive'],
+        'threshold': best_result['threshold']
+    })

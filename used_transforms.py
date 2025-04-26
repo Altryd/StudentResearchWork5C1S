@@ -155,15 +155,29 @@ test_transform_resnet_inception = transforms.Compose([
 
 
 # VIT_b_32
+"""
 train_transform_vit_b_32 = transforms.Compose([
     transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BILINEAR),
     transforms.CenterCrop((224, 224)),
-    transforms.RandomRotation(25),
-    transforms.RandomGrayscale(p=0.1),
-    transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
+    transforms.RandomRotation(10),
+    transforms.RandomGrayscale(p=0.05),
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),
     transforms.CenterCrop((224, 224)),
     transforms.ToTensor(),
     transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+"""
+
+train_transform_vit_b_32 = transforms.Compose([
+    transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BILINEAR),
+    transforms.CenterCrop((224, 224)),
+    transforms.RandomRotation(10),
+    # transforms.RandomGrayscale(p=0.05),
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),
+    transforms.CenterCrop((224, 224)),
+    transforms.ToTensor(),
+    # transforms.GaussianNoise(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])
 
@@ -230,6 +244,25 @@ train_transform_convnext_tiny = transforms.Compose([
 ])
 
 test_transform_convnext_tiny = transforms.Compose([
+    transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BILINEAR),
+    transforms.CenterCrop((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+# mobilenet_v3
+train_transform_mobilenet_v3_small = transforms.Compose([
+    transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BILINEAR),
+    transforms.CenterCrop((224, 224)),
+    transforms.RandomRotation(10),
+    # transforms.RandomGrayscale(p=0.05),
+    transforms.ColorJitter(brightness=0.1, saturation=0.1, contrast=0.1),
+    transforms.ToTensor(),
+    # transforms.GaussianNoise(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+test_transform_mobilenet_v3_small = transforms.Compose([
     transforms.Resize((224, 224), interpolation=transforms.InterpolationMode.BILINEAR),
     transforms.CenterCrop((224, 224)),
     transforms.ToTensor(),
