@@ -17,7 +17,7 @@ from torchvision.models import ViT_B_16_Weights, ViT_B_32_Weights
 from used_transforms import *
 from TransformDataset import TransformDataset
 from utility import (load_dataset_with_train_test_transforms, load_dataset_with_train_test_valid_transforms,
-                     create_model, calculate_metrics)
+                     create_model, calculate_metrics, save_metrics, load_metrics, plot_and_save_curves)
 import logging
 import time
 import datetime
@@ -25,11 +25,12 @@ import datetime
 logger = logging.getLogger(__name__)
 
 # Глобальные константы
-EMBEDDING_SIZE = 128
+EMBEDDING_SIZE = 128  # TODO!!!
 MARGIN = 1.0
-EPOCHS = 75
-BATCH_SIZE = 264
-TEST_VAL_BATCH_SIZE = -1
+START_EPOCH = 0
+EPOCHS = 50
+BATCH_SIZE = 75
+TEST_VAL_BATCH_SIZE = 75
 RANDOM_STATE = 111
 dataset_path = "datasets/CEDAR_refactored"
 dataset_name = dataset_path.split("/")[-1]
@@ -104,10 +105,12 @@ def select_triplets(embeddings, labels, use_hard=False, margin=MARGIN):
 
 
 # Функция обучения одной эпохи
-def train_epoch(model, dataloader, loss_fn, optimizer, use_hard=True):
+def train_epoch(model, dataloader, loss_fn, optimizer, use_hard=True, best_threshold=0.0):
     model.train()
     total_loss = 0
     num_valid_triplets = 0
+    all_distances = {"pos-pos": [], "gen-forg": [], "gen-imp": []}
+    # all_labels = []
 
     for batch_idx, (images, labels) in enumerate(dataloader):
         images, labels = images.to(device), labels.to(device)
@@ -137,8 +140,51 @@ def train_epoch(model, dataloader, loss_fn, optimizer, use_hard=True):
         if batch_idx % 2 == 0:  # Уменьшил частоту логов для скорости
             logger.info(f"Batch {batch_idx}, Loss: {loss.item():.4f}, Valid triplets: {len(triplets)}")
 
+            with torch.no_grad():
+                for i, label in enumerate(labels.cpu().numpy()):
+                    try:
+                        label_str = dataloader.dataset.base.classes[label]
+                    except:
+                        label_str = dataloader.dataset.base.dataset.classes[label]
+                    for j in range(len(labels)):
+                        if i != j:
+                            try:
+                                label_to_compare = dataloader.dataset.base.classes[labels[j].cpu().numpy()]
+                            except:
+                                label_to_compare = dataloader.dataset.base.dataset.classes[labels[j].cpu().numpy()]
+                            dist = l2_distance(embeddings[i].unsqueeze(0), embeddings[j].unsqueeze(0)).item()
+                            if label_str == label_to_compare:
+                                all_distances["pos-pos"].append(dist)
+                                # all_labels.append(1)
+                            elif "forg" in label_to_compare:
+                                all_distances["gen-forg"].append(dist)
+                                # all_labels.append(0)
+                            else:
+                                all_distances["gen-imp"].append(dist)
+                                # all_labels.append(0)
+
+            if batch_idx % 2 == 0:
+                logger.info(f"Batch {batch_idx}, Loss: {loss.item():.4f}, Valid triplets: {len(triplets)}")
+
+    # print("num_valid_triplets=", num_valid_triplets)
+    if num_valid_triplets == 0:
+        if hasattr(train_epoch, 'last_metrics') and train_epoch.last_metrics is not None:
+            return 0, 0, train_epoch.last_metrics
+        return 0, 0, {
+                'f1_score': 0.0,  # Будет заменено в главном цикле последними метриками
+                'roc_auc': 0.0,
+                'average_precision': 0.0,
+                'true_negative': 0,
+                'false_positive': 0,
+                'false_negative': 0,
+                'true_positive': 0,
+                'threshold': best_threshold
+            }
+
+    train_metrics = compute_metrics_from_evaluation(all_distances, best_threshold, epoch=None)
+    train_epoch.last_metrics = train_metrics
     avg_loss = total_loss / num_valid_triplets if num_valid_triplets > 0 else 0
-    return avg_loss, num_valid_triplets
+    return avg_loss, num_valid_triplets, train_metrics
 
 
 def evaluate(model, dataloader, class_to_idx, l2_distance):
@@ -204,7 +250,7 @@ def evaluate(model, dataloader, class_to_idx, l2_distance):
     return all_distances
 
 
-def compute_metrics_from_evaluation(evaluation_results, threshold):
+def compute_metrics_from_evaluation(evaluation_results, threshold, epoch=None):
     """
     Собирает расстояния из evaluate() в единый массив и считает метрики.
     :param evaluation_results: Результат evaluate(), содержащий три списка расстояний
@@ -224,8 +270,25 @@ def compute_metrics_from_evaluation(evaluation_results, threshold):
         [0] * len(evaluation_results["gen-forg"]) +
         [0] * len(evaluation_results["gen-imp"])
     )
+    # print(f"compute_metrics_from_evaluation; all_distances: {all_distances}; all labels: {all_labels}")
+    #logger.info(f"Pairs distribution: pos-pos={len(evaluation_results['pos-pos'])}, "
+    #            f"gen-forg={len(evaluation_results['gen-forg'])}, gen-imp={len(evaluation_results['gen-imp'])}")
 
-    return calculate_metrics(np.array(all_distances), np.array(all_labels), threshold)
+    # Если списки пусты, возвращаем заглушки, но логируем проблему
+    if not all_distances or not all_labels:
+        logger.warning("No valid pairs found for metrics computation. Returning placeholder metrics.")
+        return {
+            'f1_score': 0.0,  # Будет заменено в train_epoch, если возможно
+            'roc_auc': 0.0,
+            'average_precision': 0.0,
+            'true_negative': 0,
+            'false_positive': 0,
+            'false_negative': 0,
+            'true_positive': 0,
+            'threshold': threshold
+        }
+
+    return calculate_metrics(np.array(all_distances), np.array(all_labels), threshold, epoch)
 
 
 # Основной цикл
@@ -238,9 +301,11 @@ model, train_transform, test_transform = create_model(model_name="resnet34",
                                                       pretrained_path=None,
                                                       device=device)
 
+plot_save_curves_dir = f"plots/{model.name}_{dataset_name}"
+
 # Оптимизатор и потери
 triplet_loss = nn.TripletMarginLoss(margin=MARGIN)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-4, weight_decay=1e-5)
 l2_distance = PairwiseDistance(p=2)
 
 (train_dataset, val_dataset, test_dataset, train_data,
@@ -257,19 +322,6 @@ l2_distance = PairwiseDistance(p=2)
 use_hard_negatives = False  # Переключатель для semi-hard/hard negatives
 current_date = f"{datetime.datetime.now().day}-{datetime.datetime.now().month}"
 
-"""
-if use_semihard_negatives:
-    logging.basicConfig(filename=f'logs/semi_{model.name}_dataset_{dataset_name}_{current_date}.log',
-                        level=logging.INFO)
-else:
-    logging.basicConfig(filename=f'logs/{model.name}_dataset_{dataset_name}_{current_date}.log', level=logging.INFO)
-logger.info(f"EMBED_SIZE={EMBEDDING_SIZE}; MARGIN={MARGIN}; EPOCHS={EPOCHS}\n"
-            f"BATCH_SIZE={BATCH_SIZE}; TEST_VAL_BATCH_SIZE={TEST_VAL_BATCH_SIZE}; "
-            f"RANDOM_STATE={RANDOM_STATE}; DATASET={dataset_path}\n"
-            f"MODEL={model.name}; OPTIMIZER={optimizer}\n"
-            f"Triplets: {'SEMI-HARD' if use_semihard_negatives else 'HARD'}"
-            f"\nTRAIN TEST VALIDATION SPLIT")
-"""
 logging.basicConfig(filename=f'logs/new_metrics_combined_tripl_{model.name}_dataset_{dataset_name}_{current_date}.log',
                     level=logging.INFO)
 
@@ -298,16 +350,66 @@ best_test_metrics = {
 
 print(f"Параметры модели: {sum(p.numel() for p in model.parameters()) / 1e6:.2f} млн")
 print(f"Память под веса: {sum(p.numel() * p.element_size() for p in model.parameters()) / 1024 ** 2:.2f} МБ")
-for epoch in range(EPOCHS):
+# Инициализация списков для хранения метрик
+# Инициализация метрик
+metrics_file = f'metrics/metrics_{model.name}_dataset_{dataset_name}_{current_date}.json'
+metrics = load_metrics(metrics_file)
+
+# Убедимся, что списки метрик имеют правильную длину
+train_losses = metrics['train_losses']
+train_f1_scores = metrics['train_f1_scores']
+train_roc_aucs = metrics['train_roc_aucs']
+train_pr_aucs = metrics['train_pr_aucs']
+val_f1_scores = metrics['val_f1_scores']
+val_roc_aucs = metrics['val_roc_aucs']
+val_pr_aucs = metrics['val_pr_aucs']
+
+# Храним последние известные метрики
+last_train_metrics = {
+    'f1_score': train_f1_scores[-1] if train_f1_scores else 0.0,
+    'roc_auc': train_roc_aucs[-1] if train_roc_aucs else 0.0,
+    'average_precision': train_pr_aucs[-1] if train_pr_aucs else 0.0
+}
+
+# Проверка на согласованность метрик и START_EPOCH
+if len(train_losses) > START_EPOCH:
+    logger.warning(f"Loaded metrics contain {len(train_losses)} epochs, but START_EPOCH={START_EPOCH}. Truncating metrics.")
+    metrics = {
+        'train_losses': train_losses[:START_EPOCH],
+        'train_f1_scores': train_f1_scores[:START_EPOCH],
+        'train_roc_aucs': train_roc_aucs[:START_EPOCH],
+        'train_pr_aucs': train_pr_aucs[:START_EPOCH],
+        'val_f1_scores': val_f1_scores[:START_EPOCH],
+        'val_roc_aucs': val_roc_aucs[:START_EPOCH],
+        'val_pr_aucs': val_pr_aucs[:START_EPOCH]
+    }
+    train_losses = metrics['train_losses']
+    train_f1_scores = metrics['train_f1_scores']
+    train_roc_aucs = metrics['train_roc_aucs']
+    train_pr_aucs = metrics['train_pr_aucs']
+    val_f1_scores = metrics['val_f1_scores']
+    val_roc_aucs = metrics['val_roc_aucs']
+    val_pr_aucs = metrics['val_pr_aucs']
+
+
+best_threshold = 0.0
+for epoch in range(START_EPOCH, EPOCHS):
     torch.cuda.empty_cache()
     start_time = time.time()
-    logger.info(f"\nEpoch {epoch}/{EPOCHS}")
+    logger.info(f"\nEpoch {epoch + 1}/{EPOCHS}")
 
     print(f"epoch: {epoch}")
     # Обучение
-    avg_loss, num_triplets = train_epoch(model, train_dataset, triplet_loss, optimizer,
-                                         use_hard=use_hard_negatives)
+    avg_loss, num_triplets, train_metrics = train_epoch(model, train_dataset, triplet_loss, optimizer,
+                                         use_hard=use_hard_negatives, best_threshold=best_threshold)
     logger.info(f"Avg Loss: {avg_loss:.4f}, Valid Triplets: {num_triplets}")
+    print(f"train_metrics before: {train_metrics}")
+    if train_metrics['f1_score'] <= 0.001 and num_triplets == 0:
+        logger.info("Using last known train metrics due to zero triplets.")
+        train_metrics = last_train_metrics.copy()
+    else:
+        last_train_metrics = train_metrics.copy()
+    print(f"train_metrics after: {train_metrics}")
     if num_triplets < 10 and not use_hard_negatives:
         use_hard_negatives = True
         logger.info(f"The number of triplets is less than 10. Start including hard triplets")
@@ -315,6 +417,11 @@ for epoch in range(EPOCHS):
         MARGIN += 0.5
         logger.info(f"The number of triplets is less than 10. improved Margin to {MARGIN}")
     triplet_loss = nn.TripletMarginLoss(margin=MARGIN)  # TODO: ?
+    train_losses.append(avg_loss)
+    train_f1_scores.append(train_metrics['f1_score'])
+    train_roc_aucs.append(train_metrics['roc_auc'])
+    train_pr_aucs.append(train_metrics['average_precision'])
+
 
     print("Приступаем к валидации")
     print(f"Allocated: {torch.cuda.memory_allocated(device) / 1024 ** 3:.2f} GiB")
@@ -333,6 +440,9 @@ for epoch in range(EPOCHS):
     results = [compute_metrics_from_evaluation(distances, t) for t in np.arange(0.1, 30, 0.25)]
     best_result = max(results, key=lambda x: x['f1_score'])
     torch.cuda.empty_cache()
+    val_f1_scores.append(best_result['f1_score'])
+    val_roc_aucs.append(best_result['roc_auc'])
+    val_pr_aucs.append(best_result['average_precision'])
 
     logger.info(f"[VALIDATION] "
                 f"Best Threshold for epoch {epoch}: {best_result['threshold']:.1f}, F1: {best_result['f1_score']:.4f}, "
@@ -371,14 +481,45 @@ for epoch in range(EPOCHS):
             'true_positive': test_result['true_positive'],
             'threshold': best_threshold
         })
-    if epoch % SAVE_MODEL_EVERY_N_EPOCHS == 0 and epoch > 0:
+    if (epoch % SAVE_MODEL_EVERY_N_EPOCHS == 0 and epoch > 0) or epoch == EPOCHS - 1:
+        # Сохраняем метрики в JSON
+        metrics = {
+            'train_losses': train_losses,
+            'train_f1_scores': train_f1_scores,
+            'train_roc_aucs': train_roc_aucs,
+            'train_pr_aucs': train_pr_aucs,
+            'val_f1_scores': val_f1_scores,
+            'val_roc_aucs': val_roc_aucs,
+            'val_pr_aucs': val_pr_aucs
+        }
+        save_metrics(metrics, metrics_file)
+
+        # Создаем и сохраняем графики
+        plot_and_save_curves(metrics, epoch, dataset_name, epoch_label=epoch, save_dir=f"plots/{model.name}")
+
+        # Сохраняем модель
         torch.save(model.state_dict(), f"trained_models/{model.name}_trained_{dataset_name}_epoch_{epoch}.pth")
+        logger.info(f"Saved model and metrics at epoch {epoch}")
+
     end_time = time.time()
     elapsed_time = end_time - start_time
     logger.info(f'Прошло времени  (секунды): {elapsed_time}')
     gc.collect()
+
 logger.info(f"BEST METRICS:\n{best_test_metrics}")
 
-# Сохранение модели
+# Сохранение финальной модели
 torch.save(model.state_dict(), f"trained_models/{model.name}_trained_{dataset_name}_epoch_{EPOCHS}.pth")
 
+# Сохранение финальных графиков (без номера эпохи)
+metrics = {
+    'train_losses': train_losses,
+    'train_f1_scores': train_f1_scores,
+    'train_roc_aucs': train_roc_aucs,
+    'train_pr_aucs': train_pr_aucs,
+    'val_f1_scores': val_f1_scores,
+    'val_roc_aucs': val_roc_aucs,
+    'val_pr_aucs': val_pr_aucs
+}
+plot_and_save_curves(metrics, EPOCHS - 1, dataset_name,
+                     save_dir=f"plots/{model.name}")  # Финальные графики без epoch_label

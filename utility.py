@@ -1,7 +1,11 @@
+import json
+import os
+
 import timm
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
+from matplotlib import pyplot as plt
 from torchvision import datasets
 from torchvision import models
 from torch.utils.data import DataLoader, random_split
@@ -319,10 +323,11 @@ def create_model(model_name="resnet34", embedding_size=128, pretrained_path=None
     return model.to(device), train_transform, test_transform
 
 
-from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score, f1_score
+from sklearn.metrics import roc_auc_score, average_precision_score, confusion_matrix, accuracy_score, f1_score, \
+    precision_recall_curve
 
 
-def calculate_metrics(all_distances, all_labels, threshold):
+def calculate_metrics(all_distances, all_labels, threshold, epoch=None):
     """
     Высчитывает метрики по полученным расстояниям между эмбеддингами с использованием labels и threshold.
     :param distances: Расстояния между эмбеддингами
@@ -336,14 +341,30 @@ def calculate_metrics(all_distances, all_labels, threshold):
     predictions = (all_distances <= threshold).astype(int)
 
     # Вычисление метрик
+    # Micro ROC AUC для бинарной задачи
+
+    # print(all_labels)
+    # print(len(all_labels))
     roc_auc = roc_auc_score(all_labels,
                             -all_distances)  # Используем -distances, так как меньшее расстояние = большее сходство
+    # average_precision_score вычисляет площадь под кривой precision-recall, что соответствует precision-recall AUC
     ap = average_precision_score(all_labels, -all_distances)
     tn, fp, fn, tp = confusion_matrix(all_labels, predictions).ravel()
     accuracy = accuracy_score(all_labels, predictions)
     precision = tp / (tp + fp) if (tp + fp) > 0 else 0
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
     f1 = f1_score(all_labels, predictions)
+
+    if epoch is not None:
+        precision_curve, recall_curve, _ = precision_recall_curve(all_labels, -all_distances)
+        plt.figure()
+        plt.plot(recall_curve, precision_curve, label=f'Precision-Recall AUC = {ap:.4f}')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title(f'Precision-Recall Curve (Epoch {epoch})')
+        plt.legend()
+        plt.savefig(f'pr_curve_epoch_{epoch}.png')
+        plt.close()
 
     return {
         'threshold': threshold,
@@ -359,6 +380,78 @@ def calculate_metrics(all_distances, all_labels, threshold):
         'f1_score': f1
     }
 
+
+# Функция для сохранения метрик в JSON
+def save_metrics(metrics, filename):
+    with open(filename, 'w') as f:
+        json.dump(metrics, f, indent=4)
+
+
+# Функция для загрузки метрик из JSON
+def load_metrics(filename):
+    if os.path.exists(filename):
+        with open(filename, 'r') as f:
+            return json.load(f)
+    return {
+        'train_losses': [],
+        'train_f1_scores': [],
+        'train_roc_aucs': [],
+        'train_pr_aucs': [],
+        'val_f1_scores': [],
+        'val_roc_aucs': [],
+        'val_pr_aucs': []
+    }
+
+
+# Функция для построения и сохранения графиков
+def plot_and_save_curves(metrics, current_epoch, dataset_name, save_dir='plots', epoch_label="unknown",
+                         model_name="unknown"):
+    os.makedirs(save_dir, exist_ok=True)
+    epochs = range(0, current_epoch + 1)
+
+    # График потерь
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, metrics['train_losses'], label='Train Loss')
+    plt.plot(epochs, metrics['val_pr_aucs'], label='Validation Loss (approx)')  # Используем PR AUC как прокси
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training and Validation Loss')
+    plt.legend()
+    plt.savefig(f'{save_dir}/loss_curves_{dataset_name}_model_{model_name}_epoch_{epoch_label}.png')
+    plt.close()
+
+    # График F1-score
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, metrics['train_f1_scores'], label='Train F1-score')
+    plt.plot(epochs, metrics['val_f1_scores'], label='Validation F1-score')
+    plt.xlabel('Epoch')
+    plt.ylabel('F1-score')
+    plt.title('Training and Validation F1-score')
+    plt.legend()
+    plt.savefig(f'{save_dir}/f1_curves_{dataset_name}_model_{model_name}_epoch_{epoch_label}.png')
+    plt.close()
+
+    # График ROC AUC
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, metrics['train_roc_aucs'], label='Train ROC AUC')
+    plt.plot(epochs, metrics['val_roc_aucs'], label='Validation ROC AUC')
+    plt.xlabel('Epoch')
+    plt.ylabel('ROC AUC')
+    plt.title('Training and Validation ROC AUC')
+    plt.legend()
+    plt.savefig(f'{save_dir}/roc_auc_curves_{dataset_name}_model_{model_name}_epoch_{epoch_label}.png')
+    plt.close()
+
+    # График Precision-Recall AUC
+    plt.figure(figsize=(10, 6))
+    plt.plot(epochs, metrics['train_pr_aucs'], label='Train Precision-Recall AUC')
+    plt.plot(epochs, metrics['val_pr_aucs'], label='Validation Precision-Recall AUC')
+    plt.xlabel('Epoch')
+    plt.ylabel('Precision-Recall AUC')
+    plt.title('Training and Validation Precision-Recall AUC')
+    plt.legend()
+    plt.savefig(f'{save_dir}/pr_auc_curves_{dataset_name}_model_{model_name}_epoch_{epoch_label}.png')
+    plt.close()
 
 # Реализация LayerNorm2d скопирована из torchvision.models.convnext !
 import torch

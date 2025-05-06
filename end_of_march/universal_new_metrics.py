@@ -309,6 +309,10 @@ for epoch in range(EPOCHS):
     avg_loss, num_triplets = train_epoch(model, train_dataset, triplet_loss, optimizer,
                                          use_hard=use_hard_negatives)
     logger.info(f"Avg Loss: {avg_loss:.4f}, Valid Triplets: {num_triplets}")
+    if num_triplets < 10 and use_hard_negatives and MARGIN > 10.0:
+        logger.info(f"The number of triplets is {num_triplets}, MARGIN is {MARGIN}. "
+                    f"Stopping the training to avoid overfitting")
+        break
     if num_triplets < 10 and not use_hard_negatives:
         use_hard_negatives = True
         MARGIN += 0.5
