@@ -1,0 +1,509 @@
+INFO:__main__:EMBED_SIZE=128; MARGIN=1.0; EPOCHS=50
+BATCH_SIZE=75; RANDOM_STATE=111; DATASET=datasets/CEDAR_refactored
+MODEL=vit_b_16; OPTIMIZER=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.0001
+    maximize: False
+    weight_decay: 1e-05
+)
+Triplets: combinedTRANSFORMS:Train=Compose(
+      Resize(size=[224, 224], interpolation=InterpolationMode.BILINEAR, antialias=True)
+      CenterCrop(size=(224, 224))
+      RandomRotation(degrees=[-25.0, 25.0], interpolation=InterpolationMode.NEAREST, expand=False, fill=0)
+      RandomGrayscale(p=0.1)
+      ColorJitter(brightness=(0.8, 1.2), contrast=(0.85, 1.15), saturation=(0.8, 1.2))
+      CenterCrop(size=(224, 224))
+      ToTensor()
+      GaussianNoise(mean=0.0, sigma=0.1, clip=True)
+      Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+)Test=Compose(
+      Resize(size=[224, 224], interpolation=InterpolationMode.BILINEAR, antialias=True)
+      CenterCrop(size=(224, 224))
+      ToTensor()
+      Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+)
+TRAIN TEST VALIDATION SPLIT
+INFO:__main__:
+Epoch 29/50
+INFO:__main__:Batch 0, Loss: 0.5374, Valid triplets: 24
+INFO:__main__:Batch 2, Loss: 0.5498, Valid triplets: 17
+INFO:__main__:Batch 4, Loss: 0.5172, Valid triplets: 29
+INFO:__main__:Batch 6, Loss: 0.4265, Valid triplets: 11
+INFO:__main__:Batch 8, Loss: 0.4945, Valid triplets: 11
+INFO:__main__:Batch 10, Loss: 0.4881, Valid triplets: 7
+INFO:__main__:Batch 12, Loss: 0.5268, Valid triplets: 17
+INFO:__main__:Batch 14, Loss: 0.5252, Valid triplets: 11
+INFO:__main__:Batch 16, Loss: 0.5416, Valid triplets: 18
+INFO:__main__:Batch 18, Loss: 0.3802, Valid triplets: 11
+INFO:__main__:Batch 20, Loss: 0.3664, Valid triplets: 12
+INFO:__main__:Avg Loss: 0.4788, Valid Triplets: 317
+INFO:__main__:[VALIDATION] Best Threshold for epoch 28: 9.3, F1: 0.5702, ROC-AUC: 0.9947, AP: 0.5787
+INFO:__main__:TN: 119923, FP: 247, FN: 160, TP: 270
+INFO:__main__:Test result for epoch 28: F1: 0.5756, ROC-AUC: 0.9926, AP: 0.6001
+INFO:__main__:TN: 122409, FP: 191, FN: 191, TP: 259
+INFO:__main__:EMBED_SIZE=128; MARGIN=1.0; EPOCHS=50
+BATCH_SIZE=75; RANDOM_STATE=111; DATASET=datasets/CEDAR_refactored
+MODEL=vit_b_16; OPTIMIZER=Adam (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.0001
+    maximize: False
+    weight_decay: 1e-05
+)
+Triplets: combinedTRANSFORMS:Train=Compose(
+      Resize(size=[224, 224], interpolation=InterpolationMode.BILINEAR, antialias=True)
+      CenterCrop(size=(224, 224))
+      RandomRotation(degrees=[-25.0, 25.0], interpolation=InterpolationMode.NEAREST, expand=False, fill=0)
+      RandomGrayscale(p=0.1)
+      ColorJitter(brightness=(0.8, 1.2), contrast=(0.85, 1.15), saturation=(0.8, 1.2))
+      CenterCrop(size=(224, 224))
+      ToTensor()
+      GaussianNoise(mean=0.0, sigma=0.1, clip=True)
+      Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+)Test=Compose(
+      Resize(size=[224, 224], interpolation=InterpolationMode.BILINEAR, antialias=True)
+      CenterCrop(size=(224, 224))
+      ToTensor()
+      Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], inplace=False)
+)
+TRAIN TEST VALIDATION SPLIT
+WARNING:__main__:Loaded metrics contain 29 epochs, but START_EPOCH=28. Truncating metrics.
+INFO:__main__:
+Epoch 29/50
+INFO:__main__:Batch 0, Loss: 0.4762, Valid triplets: 23
+INFO:__main__:Batch 2, Loss: 0.4396, Valid triplets: 9
+INFO:__main__:Batch 4, Loss: 0.3465, Valid triplets: 28
+INFO:__main__:Batch 6, Loss: 0.3979, Valid triplets: 11
+INFO:__main__:Batch 8, Loss: 0.3729, Valid triplets: 15
+INFO:__main__:Batch 10, Loss: 0.5025, Valid triplets: 5
+INFO:__main__:Batch 12, Loss: 0.3832, Valid triplets: 17
+INFO:__main__:Batch 14, Loss: 0.4094, Valid triplets: 9
+INFO:__main__:Batch 16, Loss: 0.3636, Valid triplets: 19
+INFO:__main__:Batch 18, Loss: 0.5795, Valid triplets: 11
+INFO:__main__:Batch 20, Loss: 0.4418, Valid triplets: 9
+INFO:__main__:Avg Loss: 0.4165, Valid Triplets: 296
+INFO:__main__:[VALIDATION] Best Threshold for epoch 28: 9.1, F1: 0.6969, ROC-AUC: 0.9959, AP: 0.7139
+INFO:__main__:TN: 120026, FP: 144, FN: 123, TP: 307
+INFO:__main__:Test result for epoch 28: F1: 0.6866, ROC-AUC: 0.9957, AP: 0.7428
+INFO:__main__:TN: 122478, FP: 122, FN: 151, TP: 299
+INFO:__main__:Saved model and metrics at epoch 28
+INFO:__main__:Прошло времени  (секунды): 818.0995438098907
+INFO:__main__:
+Epoch 30/50
+INFO:__main__:Batch 0, Loss: 0.6167, Valid triplets: 7
+INFO:__main__:Batch 2, Loss: 0.5015, Valid triplets: 12
+INFO:__main__:Batch 4, Loss: 0.4922, Valid triplets: 19
+INFO:__main__:Batch 6, Loss: 0.5616, Valid triplets: 6
+INFO:__main__:Batch 8, Loss: 0.5545, Valid triplets: 11
+INFO:__main__:Batch 10, Loss: 0.4715, Valid triplets: 5
+INFO:__main__:Batch 12, Loss: 0.4066, Valid triplets: 6
+INFO:__main__:Batch 14, Loss: 0.3157, Valid triplets: 5
+INFO:__main__:Batch 16, Loss: 0.3881, Valid triplets: 16
+INFO:__main__:Batch 18, Loss: 0.3546, Valid triplets: 16
+INFO:__main__:Batch 20, Loss: 0.5272, Valid triplets: 11
+INFO:__main__:Avg Loss: 0.4338, Valid Triplets: 222
+INFO:__main__:[VALIDATION] Best Threshold for epoch 29: 7.1, F1: 0.5470, ROC-AUC: 0.9925, AP: 0.5474
+INFO:__main__:TN: 119989, FP: 181, FN: 200, TP: 230
+INFO:__main__:Test result for epoch 29: F1: 0.5599, ROC-AUC: 0.9921, AP: 0.6175
+INFO:__main__:TN: 122515, FP: 85, FN: 242, TP: 208
+INFO:__main__:Прошло времени  (секунды): 821.4866681098938
+INFO:__main__:
+Epoch 31/50
+INFO:__main__:Batch 0, Loss: 0.3374, Valid triplets: 9
+INFO:__main__:Batch 2, Loss: 0.4199, Valid triplets: 10
+INFO:__main__:Batch 4, Loss: 0.4975, Valid triplets: 26
+INFO:__main__:Batch 6, Loss: 0.4794, Valid triplets: 8
+INFO:__main__:Batch 8, Loss: 0.3715, Valid triplets: 10
+INFO:__main__:Batch 10, Loss: 0.4621, Valid triplets: 4
+INFO:__main__:Batch 12, Loss: 0.3119, Valid triplets: 4
+INFO:__main__:Batch 14, Loss: 0.3400, Valid triplets: 5
+INFO:__main__:Batch 16, Loss: 0.3995, Valid triplets: 10
+INFO:__main__:Batch 18, Loss: 0.4219, Valid triplets: 11
+INFO:__main__:Batch 20, Loss: 0.4381, Valid triplets: 8
+INFO:__main__:Avg Loss: 0.4234, Valid Triplets: 186
+INFO:__main__:[VALIDATION] Best Threshold for epoch 30: 10.1, F1: 0.6977, ROC-AUC: 0.9971, AP: 0.7541
+INFO:__main__:TN: 120027, FP: 143, FN: 123, TP: 307
+INFO:__main__:Test result for epoch 30: F1: 0.6790, ROC-AUC: 0.9968, AP: 0.7627
+INFO:__main__:TN: 122480, FP: 120, FN: 157, TP: 293
+INFO:__main__:Прошло времени  (секунды): 805.8392505645752
+INFO:__main__:
+Epoch 32/50
+INFO:__main__:Batch 0, Loss: 0.3268, Valid triplets: 5
+INFO:__main__:Batch 2, Loss: 0.3218, Valid triplets: 5
+INFO:__main__:Batch 4, Loss: 0.5380, Valid triplets: 13
+INFO:__main__:Batch 6, Loss: 0.3835, Valid triplets: 6
+INFO:__main__:Batch 8, Loss: 0.4167, Valid triplets: 10
+INFO:__main__:Batch 10, Loss: 0.3423, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.3118, Valid triplets: 6
+INFO:__main__:Batch 14, Loss: 0.3995, Valid triplets: 3
+INFO:__main__:Batch 16, Loss: 0.4837, Valid triplets: 10
+INFO:__main__:Batch 18, Loss: 0.5515, Valid triplets: 8
+INFO:__main__:Batch 20, Loss: 0.4240, Valid triplets: 5
+INFO:__main__:Avg Loss: 0.4452, Valid Triplets: 153
+INFO:__main__:[VALIDATION] Best Threshold for epoch 31: 10.6, F1: 0.6919, ROC-AUC: 0.9978, AP: 0.7494
+INFO:__main__:TN: 120046, FP: 124, FN: 137, TP: 293
+INFO:__main__:Test result for epoch 31: F1: 0.6494, ROC-AUC: 0.9958, AP: 0.7088
+INFO:__main__:TN: 122476, FP: 124, FN: 174, TP: 276
+INFO:__main__:Прошло времени  (секунды): 804.3893988132477
+INFO:__main__:
+Epoch 33/50
+INFO:__main__:Batch 0, Loss: 0.5373, Valid triplets: 9
+INFO:__main__:Batch 2, Loss: 0.4955, Valid triplets: 11
+INFO:__main__:Batch 4, Loss: 0.3923, Valid triplets: 17
+INFO:__main__:Batch 6, Loss: 0.4284, Valid triplets: 9
+INFO:__main__:Batch 8, Loss: 0.5183, Valid triplets: 10
+INFO:__main__:Batch 10, Loss: 0.4250, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.1435, Valid triplets: 3
+INFO:__main__:Batch 14, Loss: 0.5694, Valid triplets: 5
+INFO:__main__:Batch 16, Loss: 0.2242, Valid triplets: 9
+INFO:__main__:Batch 18, Loss: 0.2947, Valid triplets: 5
+INFO:__main__:Batch 20, Loss: 0.4842, Valid triplets: 10
+INFO:__main__:Avg Loss: 0.4531, Valid Triplets: 160
+INFO:__main__:[VALIDATION] Best Threshold for epoch 32: 9.8, F1: 0.6780, ROC-AUC: 0.9970, AP: 0.7583
+INFO:__main__:TN: 120056, FP: 114, FN: 151, TP: 279
+INFO:__main__:Test result for epoch 32: F1: 0.6759, ROC-AUC: 0.9967, AP: 0.7663
+INFO:__main__:TN: 122523, FP: 77, FN: 181, TP: 269
+INFO:__main__:Saved model and metrics at epoch 32
+INFO:__main__:Прошло времени  (секунды): 801.8077120780945
+INFO:__main__:
+Epoch 34/50
+INFO:__main__:Batch 0, Loss: 0.4288, Valid triplets: 8
+INFO:__main__:Batch 2, Loss: 0.3049, Valid triplets: 4
+INFO:__main__:Batch 4, Loss: 0.4433, Valid triplets: 16
+INFO:__main__:Batch 6, Loss: 0.5093, Valid triplets: 4
+INFO:__main__:Batch 8, Loss: 0.4923, Valid triplets: 7
+INFO:__main__:Batch 10, Loss: 0.2406, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.5040, Valid triplets: 11
+INFO:__main__:Batch 14, Loss: 0.2504, Valid triplets: 5
+INFO:__main__:Batch 16, Loss: 0.5005, Valid triplets: 8
+INFO:__main__:Batch 18, Loss: 0.4525, Valid triplets: 7
+INFO:__main__:Batch 20, Loss: 0.5092, Valid triplets: 5
+INFO:__main__:Avg Loss: 0.4224, Valid Triplets: 125
+INFO:__main__:[VALIDATION] Best Threshold for epoch 33: 9.8, F1: 0.6577, ROC-AUC: 0.9965, AP: 0.6768
+INFO:__main__:TN: 120049, FP: 121, FN: 160, TP: 270
+INFO:__main__:Test result for epoch 33: F1: 0.6553, ROC-AUC: 0.9951, AP: 0.7316
+INFO:__main__:TN: 122500, FP: 100, FN: 182, TP: 268
+INFO:__main__:Прошло времени  (секунды): 807.9469974040985
+INFO:__main__:
+Epoch 35/50
+INFO:__main__:Batch 0, Loss: 0.5676, Valid triplets: 16
+INFO:__main__:Batch 2, Loss: 0.3747, Valid triplets: 9
+INFO:__main__:Batch 4, Loss: 0.3274, Valid triplets: 13
+INFO:__main__:Batch 6, Loss: 0.2572, Valid triplets: 4
+INFO:__main__:Batch 8, Loss: 0.5622, Valid triplets: 2
+INFO:__main__:Batch 10, Loss: 0.3550, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.7929, Valid triplets: 2
+INFO:__main__:Batch 14, Loss: 0.4497, Valid triplets: 5
+INFO:__main__:Batch 16, Loss: 0.1845, Valid triplets: 5
+INFO:__main__:Batch 18, Loss: 0.3183, Valid triplets: 8
+INFO:__main__:Batch 20, Loss: 0.3641, Valid triplets: 5
+INFO:__main__:Avg Loss: 0.4058, Valid Triplets: 132
+INFO:__main__:[VALIDATION] Best Threshold for epoch 34: 10.6, F1: 0.6868, ROC-AUC: 0.9972, AP: 0.7272
+INFO:__main__:TN: 120036, FP: 134, FN: 135, TP: 295
+INFO:__main__:Test result for epoch 34: F1: 0.6844, ROC-AUC: 0.9970, AP: 0.7413
+INFO:__main__:TN: 122458, FP: 142, FN: 142, TP: 308
+INFO:__main__:Прошло времени  (секунды): 819.1362147331238
+INFO:__main__:
+Epoch 36/50
+INFO:__main__:Batch 0, Loss: 0.3667, Valid triplets: 7
+INFO:__main__:Batch 2, Loss: 0.5223, Valid triplets: 9
+INFO:__main__:Batch 4, Loss: 0.3512, Valid triplets: 11
+INFO:__main__:Batch 6, Loss: 0.1012, Valid triplets: 1
+INFO:__main__:Batch 8, Loss: 0.0912, Valid triplets: 2
+INFO:__main__:Batch 10, Loss: 0.3830, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.4045, Valid triplets: 14
+INFO:__main__:Batch 14, Loss: 0.2961, Valid triplets: 3
+INFO:__main__:Batch 16, Loss: 0.4159, Valid triplets: 13
+INFO:__main__:Batch 18, Loss: 0.5690, Valid triplets: 7
+INFO:__main__:Batch 20, Loss: 0.2933, Valid triplets: 5
+INFO:__main__:Avg Loss: 0.4250, Valid Triplets: 133
+INFO:__main__:[VALIDATION] Best Threshold for epoch 35: 11.3, F1: 0.6598, ROC-AUC: 0.9969, AP: 0.6574
+INFO:__main__:TN: 119946, FP: 224, FN: 108, TP: 322
+INFO:__main__:Test result for epoch 35: F1: 0.6393, ROC-AUC: 0.9970, AP: 0.6790
+INFO:__main__:TN: 122386, FP: 214, FN: 138, TP: 312
+INFO:__main__:Прошло времени  (секунды): 809.3663170337677
+INFO:__main__:
+Epoch 37/50
+INFO:__main__:Batch 0, Loss: 0.3230, Valid triplets: 11
+INFO:__main__:Batch 2, Loss: 0.6154, Valid triplets: 7
+INFO:__main__:Batch 4, Loss: 0.4237, Valid triplets: 14
+INFO:__main__:Batch 6, Loss: 0.5157, Valid triplets: 4
+INFO:__main__:Batch 8, Loss: 0.4048, Valid triplets: 6
+INFO:__main__:Batch 10, Loss: 0.4572, Valid triplets: 2
+INFO:__main__:Batch 12, Loss: 0.2101, Valid triplets: 1
+INFO:__main__:Batch 14, Loss: 0.3310, Valid triplets: 4
+INFO:__main__:Batch 16, Loss: 0.4413, Valid triplets: 13
+INFO:__main__:Batch 18, Loss: 0.3678, Valid triplets: 12
+INFO:__main__:Batch 20, Loss: 0.2889, Valid triplets: 11
+INFO:__main__:Avg Loss: 0.4256, Valid Triplets: 153
+INFO:__main__:[VALIDATION] Best Threshold for epoch 36: 8.8, F1: 0.6422, ROC-AUC: 0.9938, AP: 0.6913
+INFO:__main__:TN: 119989, FP: 181, FN: 141, TP: 289
+INFO:__main__:Test result for epoch 36: F1: 0.6199, ROC-AUC: 0.9949, AP: 0.6699
+INFO:__main__:TN: 122420, FP: 180, FN: 167, TP: 283
+INFO:__main__:Saved model and metrics at epoch 36
+INFO:__main__:Прошло времени  (секунды): 849.2185702323914
+INFO:__main__:
+Epoch 38/50
+INFO:__main__:Batch 0, Loss: 0.3699, Valid triplets: 5
+INFO:__main__:Batch 2, Loss: 0.2026, Valid triplets: 2
+INFO:__main__:Batch 4, Loss: 0.3779, Valid triplets: 15
+INFO:__main__:Batch 6, Loss: 0.4230, Valid triplets: 8
+INFO:__main__:Batch 8, Loss: 0.6033, Valid triplets: 8
+INFO:__main__:Batch 10, Loss: 0.1529, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.6293, Valid triplets: 3
+INFO:__main__:Batch 14, Loss: 0.5303, Valid triplets: 2
+INFO:__main__:Batch 16, Loss: 0.5413, Valid triplets: 7
+INFO:__main__:Batch 18, Loss: 0.3840, Valid triplets: 5
+INFO:__main__:Batch 20, Loss: 0.7122, Valid triplets: 5
+INFO:__main__:Avg Loss: 0.4217, Valid Triplets: 110
+INFO:__main__:[VALIDATION] Best Threshold for epoch 37: 10.3, F1: 0.6905, ROC-AUC: 0.9978, AP: 0.7395
+INFO:__main__:TN: 120014, FP: 156, FN: 121, TP: 309
+INFO:__main__:Test result for epoch 37: F1: 0.6747, ROC-AUC: 0.9967, AP: 0.7249
+INFO:__main__:TN: 122447, FP: 153, FN: 143, TP: 307
+INFO:__main__:Прошло времени  (секунды): 817.1048781871796
+INFO:__main__:
+Epoch 39/50
+INFO:__main__:Batch 0, Loss: 0.2973, Valid triplets: 5
+INFO:__main__:Batch 2, Loss: 0.2407, Valid triplets: 2
+INFO:__main__:Batch 4, Loss: 0.4086, Valid triplets: 11
+INFO:__main__:Batch 6, Loss: 0.4927, Valid triplets: 5
+INFO:__main__:Batch 8, Loss: 0.4418, Valid triplets: 5
+INFO:__main__:Batch 10, Loss: 0.3882, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.2098, Valid triplets: 8
+INFO:__main__:Batch 14, Loss: 0.8079, Valid triplets: 3
+INFO:__main__:Batch 16, Loss: 0.4051, Valid triplets: 4
+INFO:__main__:Batch 18, Loss: 0.1833, Valid triplets: 2
+INFO:__main__:Batch 20, Loss: 0.4113, Valid triplets: 8
+INFO:__main__:Avg Loss: 0.4026, Valid Triplets: 96
+INFO:__main__:[VALIDATION] Best Threshold for epoch 38: 11.6, F1: 0.6317, ROC-AUC: 0.9970, AP: 0.6767
+INFO:__main__:TN: 119948, FP: 222, FN: 129, TP: 301
+INFO:__main__:Test result for epoch 38: F1: 0.6428, ROC-AUC: 0.9969, AP: 0.7007
+INFO:__main__:TN: 122444, FP: 156, FN: 163, TP: 287
+INFO:__main__:Прошло времени  (секунды): 831.4138412475586
+INFO:__main__:
+Epoch 40/50
+INFO:__main__:Batch 0, Loss: 0.3028, Valid triplets: 6
+INFO:__main__:Batch 2, Loss: 0.6273, Valid triplets: 7
+INFO:__main__:Batch 4, Loss: 0.2754, Valid triplets: 13
+INFO:__main__:Batch 6, Loss: 0.5676, Valid triplets: 5
+INFO:__main__:Batch 8, Loss: 0.2621, Valid triplets: 7
+INFO:__main__:Batch 10, Loss: 0.5726, Valid triplets: 2
+INFO:__main__:Batch 12, Loss: 0.4798, Valid triplets: 9
+INFO:__main__:Batch 14, Loss: 0.3171, Valid triplets: 4
+INFO:__main__:Batch 16, Loss: 0.4487, Valid triplets: 4
+INFO:__main__:Batch 18, Loss: 0.4756, Valid triplets: 2
+INFO:__main__:Batch 20, Loss: 0.3534, Valid triplets: 6
+INFO:__main__:Avg Loss: 0.4013, Valid Triplets: 119
+INFO:__main__:[VALIDATION] Best Threshold for epoch 39: 8.8, F1: 0.6281, ROC-AUC: 0.9953, AP: 0.6535
+INFO:__main__:TN: 120019, FP: 151, FN: 164, TP: 266
+INFO:__main__:Test result for epoch 39: F1: 0.6087, ROC-AUC: 0.9943, AP: 0.6469
+INFO:__main__:TN: 122458, FP: 142, FN: 191, TP: 259
+INFO:__main__:Прошло времени  (секунды): 814.2592186927795
+INFO:__main__:
+Epoch 41/50
+INFO:__main__:Batch 0, Loss: 0.4532, Valid triplets: 6
+INFO:__main__:Batch 2, Loss: 0.4407, Valid triplets: 8
+INFO:__main__:Batch 4, Loss: 0.3450, Valid triplets: 15
+INFO:__main__:Batch 6, Loss: 0.5752, Valid triplets: 1
+INFO:__main__:Batch 8, Loss: 0.2457, Valid triplets: 4
+INFO:__main__:Batch 10, Loss: 0.5481, Valid triplets: 2
+INFO:__main__:Batch 12, Loss: 0.7359, Valid triplets: 2
+INFO:__main__:Batch 14, Loss: 0.6463, Valid triplets: 5
+INFO:__main__:Batch 16, Loss: 0.5542, Valid triplets: 5
+INFO:__main__:Batch 18, Loss: 0.4750, Valid triplets: 7
+INFO:__main__:Batch 20, Loss: 0.5537, Valid triplets: 8
+INFO:__main__:Avg Loss: 0.4442, Valid Triplets: 117
+INFO:__main__:[VALIDATION] Best Threshold for epoch 40: 10.1, F1: 0.6889, ROC-AUC: 0.9978, AP: 0.7565
+INFO:__main__:TN: 120050, FP: 120, FN: 141, TP: 289
+INFO:__main__:Test result for epoch 40: F1: 0.6934, ROC-AUC: 0.9964, AP: 0.7489
+INFO:__main__:TN: 122496, FP: 104, FN: 156, TP: 294
+INFO:__main__:Saved model and metrics at epoch 40
+INFO:__main__:Прошло времени  (секунды): 835.2713797092438
+INFO:__main__:
+Epoch 42/50
+INFO:__main__:Batch 0, Loss: 0.3290, Valid triplets: 8
+INFO:__main__:Batch 2, Loss: 0.5560, Valid triplets: 4
+INFO:__main__:Batch 4, Loss: 0.4659, Valid triplets: 10
+INFO:__main__:Batch 6, Loss: 0.2887, Valid triplets: 1
+INFO:__main__:Batch 8, Loss: 0.4122, Valid triplets: 5
+INFO:__main__:Batch 10, Loss: 0.4933, Valid triplets: 3
+INFO:__main__:Batch 12, Loss: 0.3720, Valid triplets: 2
+INFO:__main__:Batch 14, Loss: 0.3998, Valid triplets: 2
+INFO:__main__:Batch 16, Loss: 0.2931, Valid triplets: 3
+INFO:__main__:Batch 18, Loss: 0.3237, Valid triplets: 4
+INFO:__main__:Batch 20, Loss: 0.4802, Valid triplets: 4
+INFO:__main__:Avg Loss: 0.4271, Valid Triplets: 104
+INFO:__main__:[VALIDATION] Best Threshold for epoch 41: 10.6, F1: 0.6816, ROC-AUC: 0.9973, AP: 0.7267
+INFO:__main__:TN: 119983, FP: 187, FN: 111, TP: 319
+INFO:__main__:Test result for epoch 41: F1: 0.6695, ROC-AUC: 0.9975, AP: 0.7397
+INFO:__main__:TN: 122432, FP: 168, FN: 139, TP: 311
+INFO:__main__:Прошло времени  (секунды): 821.2831375598907
+INFO:__main__:
+Epoch 43/50
+INFO:__main__:Batch 0, Loss: 0.7045, Valid triplets: 4
+INFO:__main__:Batch 2, Loss: 0.3163, Valid triplets: 4
+INFO:__main__:Batch 4, Loss: 0.2367, Valid triplets: 5
+INFO:__main__:Batch 6, Loss: 0.3031, Valid triplets: 5
+INFO:__main__:Batch 8, Loss: 0.4727, Valid triplets: 2
+INFO:__main__:Batch 10, Loss: 0.2892, Valid triplets: 2
+INFO:__main__:Batch 12, Loss: 0.5125, Valid triplets: 3
+INFO:__main__:Batch 14, Loss: 0.4222, Valid triplets: 1
+INFO:__main__:Batch 16, Loss: 0.3380, Valid triplets: 7
+INFO:__main__:Batch 18, Loss: 0.7511, Valid triplets: 1
+INFO:__main__:Batch 20, Loss: 0.1439, Valid triplets: 1
+INFO:__main__:Avg Loss: 0.4155, Valid Triplets: 83
+INFO:__main__:[VALIDATION] Best Threshold for epoch 42: 11.6, F1: 0.5907, ROC-AUC: 0.9958, AP: 0.5990
+INFO:__main__:TN: 119932, FP: 238, FN: 150, TP: 280
+INFO:__main__:Test result for epoch 42: F1: 0.6334, ROC-AUC: 0.9930, AP: 0.6440
+INFO:__main__:TN: 122420, FP: 180, FN: 158, TP: 292
+INFO:__main__:Прошло времени  (секунды): 845.085925579071
+INFO:__main__:
+Epoch 44/50
+INFO:__main__:Batch 0, Loss: 0.4858, Valid triplets: 12
+INFO:__main__:Batch 2, Loss: 0.3867, Valid triplets: 8
+INFO:__main__:Batch 4, Loss: 0.5779, Valid triplets: 13
+INFO:__main__:Batch 6, Loss: 0.6269, Valid triplets: 5
+INFO:__main__:Batch 8, Loss: 0.4215, Valid triplets: 5
+INFO:__main__:Batch 10, Loss: 0.4184, Valid triplets: 2
+INFO:__main__:Batch 12, Loss: 0.4534, Valid triplets: 1
+INFO:__main__:Batch 14, Loss: 0.2220, Valid triplets: 1
+INFO:__main__:Batch 16, Loss: 0.3017, Valid triplets: 7
+INFO:__main__:Batch 18, Loss: 0.3317, Valid triplets: 1
+INFO:__main__:Batch 20, Loss: 0.7464, Valid triplets: 3
+INFO:__main__:Avg Loss: 0.4568, Valid Triplets: 113
+INFO:__main__:[VALIDATION] Best Threshold for epoch 43: 11.3, F1: 0.6914, ROC-AUC: 0.9979, AP: 0.7522
+INFO:__main__:TN: 120019, FP: 151, FN: 123, TP: 307
+INFO:__main__:Test result for epoch 43: F1: 0.7296, ROC-AUC: 0.9980, AP: 0.7942
+INFO:__main__:TN: 122498, FP: 102, FN: 133, TP: 317
+INFO:__main__:Прошло времени  (секунды): 839.3336341381073
+INFO:__main__:
+Epoch 45/50
+INFO:__main__:Batch 0, Loss: 0.3088, Valid triplets: 6
+INFO:__main__:Batch 2, Loss: 0.3457, Valid triplets: 7
+INFO:__main__:Batch 4, Loss: 0.3234, Valid triplets: 9
+INFO:__main__:Batch 6, Loss: 0.6026, Valid triplets: 1
+INFO:__main__:Batch 8, Loss: 0.3574, Valid triplets: 5
+INFO:__main__:Batch 12, Loss: 0.5618, Valid triplets: 2
+INFO:__main__:Batch 14, Loss: 0.8093, Valid triplets: 2
+INFO:__main__:Batch 16, Loss: 0.5922, Valid triplets: 4
+INFO:__main__:Batch 18, Loss: 0.1976, Valid triplets: 7
+INFO:__main__:Batch 20, Loss: 0.5001, Valid triplets: 4
+INFO:__main__:Avg Loss: 0.4184, Valid Triplets: 82
+INFO:__main__:[VALIDATION] Best Threshold for epoch 44: 10.1, F1: 0.7017, ROC-AUC: 0.9981, AP: 0.7654
+INFO:__main__:TN: 120019, FP: 151, FN: 116, TP: 314
+INFO:__main__:Test result for epoch 44: F1: 0.7177, ROC-AUC: 0.9978, AP: 0.7960
+INFO:__main__:TN: 122480, FP: 120, FN: 131, TP: 319
+INFO:__main__:Saved model and metrics at epoch 44
+INFO:__main__:Прошло времени  (секунды): 868.9859845638275
+INFO:__main__:
+Epoch 46/50
+INFO:__main__:Batch 0, Loss: 0.2422, Valid triplets: 5
+INFO:__main__:Batch 2, Loss: 0.4691, Valid triplets: 5
+INFO:__main__:Batch 4, Loss: 0.4574, Valid triplets: 5
+INFO:__main__:Batch 6, Loss: 0.2833, Valid triplets: 2
+INFO:__main__:Batch 8, Loss: 0.1544, Valid triplets: 1
+INFO:__main__:Batch 10, Loss: 0.1099, Valid triplets: 1
+INFO:__main__:Batch 12, Loss: 0.8031, Valid triplets: 1
+INFO:__main__:Batch 14, Loss: 0.1940, Valid triplets: 4
+INFO:__main__:Batch 16, Loss: 0.5292, Valid triplets: 3
+INFO:__main__:Batch 18, Loss: 0.4709, Valid triplets: 6
+INFO:__main__:Batch 20, Loss: 0.4737, Valid triplets: 3
+INFO:__main__:Avg Loss: 0.3997, Valid Triplets: 77
+INFO:__main__:[VALIDATION] Best Threshold for epoch 45: 11.6, F1: 0.7196, ROC-AUC: 0.9980, AP: 0.7660
+INFO:__main__:TN: 120020, FP: 150, FN: 104, TP: 326
+INFO:__main__:Test result for epoch 45: F1: 0.6948, ROC-AUC: 0.9973, AP: 0.7575
+INFO:__main__:TN: 122447, FP: 153, FN: 129, TP: 321
+INFO:__main__:Прошло времени  (секунды): 815.8920004367828
+INFO:__main__:
+Epoch 47/50
+INFO:__main__:Batch 0, Loss: 0.3175, Valid triplets: 4
+INFO:__main__:Batch 2, Loss: 0.4492, Valid triplets: 2
+INFO:__main__:Batch 4, Loss: 0.5254, Valid triplets: 8
+INFO:__main__:Batch 6, Loss: 0.4326, Valid triplets: 7
+INFO:__main__:Batch 8, Loss: 0.4258, Valid triplets: 6
+INFO:__main__:Batch 10, Loss: 0.7567, Valid triplets: 1
+INFO:__main__:Batch 12, Loss: 0.2302, Valid triplets: 3
+INFO:__main__:Batch 14, Loss: 0.1067, Valid triplets: 1
+INFO:__main__:Batch 16, Loss: 0.3166, Valid triplets: 3
+INFO:__main__:Batch 18, Loss: 0.0613, Valid triplets: 3
+INFO:__main__:Batch 20, Loss: 0.4125, Valid triplets: 4
+INFO:__main__:Avg Loss: 0.4301, Valid Triplets: 82
+INFO:__main__:[VALIDATION] Best Threshold for epoch 46: 10.8, F1: 0.6667, ROC-AUC: 0.9955, AP: 0.7019
+INFO:__main__:TN: 120038, FP: 132, FN: 149, TP: 281
+INFO:__main__:Test result for epoch 46: F1: 0.6775, ROC-AUC: 0.9973, AP: 0.7427
+INFO:__main__:TN: 122480, FP: 120, FN: 158, TP: 292
+INFO:__main__:Прошло времени  (секунды): 856.8985550403595
+INFO:__main__:
+Epoch 48/50
+INFO:__main__:Batch 0, Loss: 0.7104, Valid triplets: 2
+INFO:__main__:Batch 2, Loss: 0.5115, Valid triplets: 8
+INFO:__main__:Batch 4, Loss: 0.5302, Valid triplets: 5
+INFO:__main__:Batch 6, Loss: 0.0442, Valid triplets: 1
+INFO:__main__:Batch 8, Loss: 0.9005, Valid triplets: 1
+INFO:__main__:Batch 10, Loss: 0.8162, Valid triplets: 1
+INFO:__main__:Batch 12, Loss: 0.3336, Valid triplets: 8
+INFO:__main__:Batch 14, Loss: 0.3492, Valid triplets: 1
+INFO:__main__:Batch 16, Loss: 0.4988, Valid triplets: 5
+INFO:__main__:Batch 18, Loss: 0.4561, Valid triplets: 4
+INFO:__main__:Batch 20, Loss: 0.0893, Valid triplets: 1
+INFO:__main__:Avg Loss: 0.4512, Valid Triplets: 73
+INFO:__main__:[VALIDATION] Best Threshold for epoch 47: 10.1, F1: 0.7067, ROC-AUC: 0.9969, AP: 0.7674
+INFO:__main__:TN: 120062, FP: 108, FN: 136, TP: 294
+INFO:__main__:Test result for epoch 47: F1: 0.7123, ROC-AUC: 0.9969, AP: 0.7569
+INFO:__main__:TN: 122504, FP: 96, FN: 148, TP: 302
+INFO:__main__:Прошло времени  (секунды): 837.1936433315277
+INFO:__main__:
+Epoch 49/50
+INFO:__main__:Batch 0, Loss: 0.3329, Valid triplets: 12
+INFO:__main__:Batch 2, Loss: 0.3856, Valid triplets: 5
+INFO:__main__:Batch 4, Loss: 0.3247, Valid triplets: 9
+INFO:__main__:Batch 6, Loss: 0.2792, Valid triplets: 5
+INFO:__main__:Batch 8, Loss: 0.5209, Valid triplets: 4
+INFO:__main__:Batch 10, Loss: 0.5181, Valid triplets: 2
+INFO:__main__:Batch 12, Loss: 0.0092, Valid triplets: 1
+INFO:__main__:Batch 14, Loss: 0.5196, Valid triplets: 2
+INFO:__main__:Batch 16, Loss: 0.4070, Valid triplets: 8
+INFO:__main__:Batch 18, Loss: 0.7802, Valid triplets: 2
+INFO:__main__:Batch 20, Loss: 0.4492, Valid triplets: 5
+INFO:__main__:Avg Loss: 0.4418, Valid Triplets: 99
+INFO:__main__:[VALIDATION] Best Threshold for epoch 48: 10.8, F1: 0.6842, ROC-AUC: 0.9968, AP: 0.7295
+INFO:__main__:TN: 120025, FP: 145, FN: 131, TP: 299
+INFO:__main__:Test result for epoch 48: F1: 0.6480, ROC-AUC: 0.9975, AP: 0.6958
+INFO:__main__:TN: 122422, FP: 178, FN: 149, TP: 301
+INFO:__main__:Saved model and metrics at epoch 48
+INFO:__main__:Прошло времени  (секунды): 828.6119294166565
+INFO:__main__:
+Epoch 50/50
+INFO:__main__:Batch 0, Loss: 0.1908, Valid triplets: 1
+INFO:__main__:Batch 2, Loss: 0.3200, Valid triplets: 3
+INFO:__main__:Batch 4, Loss: 0.4315, Valid triplets: 13
+INFO:__main__:Batch 6, Loss: 0.4774, Valid triplets: 2
+INFO:__main__:Batch 8, Loss: 0.5782, Valid triplets: 7
+INFO:__main__:Batch 10, Loss: 0.6353, Valid triplets: 1
+INFO:__main__:Batch 12, Loss: 0.6073, Valid triplets: 2
+INFO:__main__:Batch 14, Loss: 0.6754, Valid triplets: 3
+INFO:__main__:Batch 16, Loss: 0.3599, Valid triplets: 7
+INFO:__main__:Batch 18, Loss: 0.1166, Valid triplets: 1
+INFO:__main__:Batch 20, Loss: 0.6289, Valid triplets: 7
+INFO:__main__:Avg Loss: 0.4792, Valid Triplets: 96
+INFO:__main__:[VALIDATION] Best Threshold for epoch 49: 10.1, F1: 0.6650, ROC-AUC: 0.9969, AP: 0.7220
+INFO:__main__:TN: 120062, FP: 108, FN: 162, TP: 268
+INFO:__main__:Test result for epoch 49: F1: 0.6340, ROC-AUC: 0.9967, AP: 0.7013
+INFO:__main__:TN: 122492, FP: 108, FN: 191, TP: 259
+INFO:__main__:Saved model and metrics at epoch 49
+INFO:__main__:Прошло времени  (секунды): 854.0457186698914
+INFO:__main__:BEST METRICS:
+{'f1_score': 0.7295742232451093, 'roc_auc': 0.9979521297806779, 'average_precision': 0.7942000372466039, 'epoch': 43, 'true_negative': 122498, 'false_positive': 102, 'false_negative': 133, 'true_positive': 317, 'threshold': 11.349999999999998}
