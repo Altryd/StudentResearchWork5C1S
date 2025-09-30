@@ -432,6 +432,8 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
                 total_correct += (predicted == labels).sum().item()
 
         accuracy = total_correct / len(val_data)
+        if epoch % 5 == 0 and epoch > 0:
+            torch.save(model, f'{model_name}_{dataset_name}_epoch_{epoch}.pth')
         if accuracy > best_acc:
             torch.save(model, f'{model_name}_{dataset_name}_best_acc.pth')
             best_acc = accuracy
