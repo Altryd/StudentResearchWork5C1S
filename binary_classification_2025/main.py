@@ -39,18 +39,25 @@ MODELS = {
         'model_fn': models.efficientnet_b4,
         'classifier_fn': lambda in_features: nn.Sequential(nn.Dropout(0.5), nn.Linear(in_features, 2))
     },
+    'swin_v2_b': {
+        'input_size': 256,
+        'weights': 'IMAGENET1K_V1',
+        'model_fn': models.swin_v2_b,
+        'classifier_fn': lambda in_features: nn.Sequential(nn.Dropout(0.3), nn.Linear(in_features, 2)),
+        'interpolation': transforms.InterpolationMode.BICUBIC
+    }
     # другие модели TODO
 }
 
 
-def get_transforms(input_size, grayscale=False):
+def get_transforms(input_size, grayscale=False, interpolation=transforms.InterpolationMode.BILINEAR):
     mean, std = ([0.5, 0.5, 0.5], [0.5, 0.5, 0.5]) if grayscale else ([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     grayscale_transform = transforms.Grayscale(num_output_channels=3) if grayscale else transforms.Identity()
 
     train_transform = transforms.Compose([
         grayscale_transform,
-        transforms.Resize((input_size, input_size)),
-        transforms.RandomResizedCrop(input_size, scale=(0.9, 1.0), ratio=(0.75, 1.33)),
+        transforms.Resize((input_size, input_size), interpolation=interpolation),
+        transforms.RandomResizedCrop(input_size, scale=(0.9, 1.0), ratio=(0.75, 1.33), interpolation=interpolation),
         transforms.RandomRotation(25),
         transforms.RandomGrayscale(p=0.1),
         transforms.ColorJitter(brightness=0.2, saturation=0.2, contrast=0.15),
@@ -62,7 +69,7 @@ def get_transforms(input_size, grayscale=False):
 
     test_transform = transforms.Compose([
         grayscale_transform,
-        transforms.Resize((input_size, input_size)),
+        transforms.Resize((input_size, input_size), interpolation=interpolation),
         transforms.ToTensor(),
         transforms.Normalize(mean=mean, std=std)
     ])
@@ -78,6 +85,9 @@ def load_model(model_name):
     elif hasattr(model, 'heads'):  # ViT
         in_features = model.heads.head.in_features
         model.heads = config['classifier_fn'](in_features)
+    elif hasattr(model, 'head'):
+        in_features = model.head.in_features
+        model.head = config['classifier_fn'](in_features)
     return model
 
 
@@ -191,14 +201,7 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
             min_val_loss = val_loss
             torch.save(model.state_dict(), f'{model_name}_{dataset_name}_fold{fold + 1}_best_acc.pth')
 
-        if val_loss < min_val_loss:
-            min_val_loss = val_loss
-            counter = 0
-        else:
-            counter += 1
-            if counter >= patience:
-                print("Early stopping")
-                break
+
         checkpoint = {
             'epoch': epoch,
             'model_state': model.state_dict(),
@@ -212,6 +215,14 @@ def train_model(model, optimizer, criterion, train_dataset, val_dataset, train_d
         torch.save(checkpoint, checkpoint_file)
         print(f'Epoch [{epoch + 1}/{num_epochs}], Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, '
               f'Train Acc: {100 * total_correct_train / len(train_data):.2f}%, Test Acc: {100 * accuracy:.2f}%')
+        if val_loss < min_val_loss:
+            min_val_loss = val_loss
+            counter = 0
+        else:
+            counter += 1
+            if counter >= patience:
+                print("Early stopping")
+                break
 
     print(f"Best acc: {best_acc:.4f} with val loss: {min_val_loss:.4f}")
 
@@ -232,8 +243,12 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     criterion = nn.CrossEntropyLoss()
 
-    train_transform, test_transform = get_transforms(MODELS[args.model]['input_size'], args.grayscale)
-
+    interpolation = transforms.InterpolationMode.BILINEAR
+    if 'interpolation' in MODELS[args.model]:
+        interpolation = MODELS[args.model]['interpolation']
+    train_transform, test_transform = get_transforms(MODELS[args.model]['input_size'], args.grayscale,
+                                                     interpolation=interpolation)
+    print(train_transform,  test_transform)
     # 5-fold CV
     skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=random_state)
     accs = []
